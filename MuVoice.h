@@ -507,5 +507,22 @@ class MuVoice
 	 *
 	 **/	
     MuError	Move(float time);
+    
+    /**
+	 * @brief Removes blank notes (rests)
+	 *
+	 * @details
+	 * Removes every note that contains pitch == 0 or amp == 0 from selected
+     * voice. These notes are usually used to mark pauses in applications
+     * that require explicit rests. Since MuM uses explicit start times for
+     * every note, deleting these notes won't affect rhythm or performance...	 
+     *
+	 * @param time (float) - index of note to be transposed
+	 *
+	 * @return
+	 * MuError
+     *
+	 **/
+    MuError RemoveBlankNotes(void);
 };
 #endif

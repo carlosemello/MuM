@@ -340,7 +340,7 @@ MuError MuVoice::RemoveNote(long num)
             
             if(foundIt)
             {
-                if(count == 0)			// we are deleting the frist note
+                if(count == 0)			// we are deleting the first note
                 {
                     noteList = temp->Next();	// point to the rest of the list
                     delete temp;			// Remove current link...
@@ -837,3 +837,36 @@ MuError MuVoice::Move(float time)
     }
     return err;
 }
+
+MuError MuVoice::RemoveBlankNotes(void)
+{
+    MuError err(MuERROR_NONE);
+    MuNote * curr, * previous, * temp;
+    curr = previous = noteList;
+    bool noteWasDeleted = false;
+    
+    while(curr)
+    {
+        if( (curr->Pitch() == 0) || (curr->Amp() == 0) )
+        {
+            temp = curr;
+            previous->SetNext(curr->Next());
+            curr = curr->Next();
+            delete temp;
+            noteWasDeleted = true;
+            numOfNotes--;
+        }
+        
+        if (noteWasDeleted == false)
+        {
+            previous = curr;
+            curr = curr->Next();
+        }
+        
+        noteWasDeleted = false;
+    }
+    
+    return err;
+}
+
+

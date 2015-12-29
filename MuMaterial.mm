@@ -2244,6 +2244,15 @@ void MuMaterial::Decrescendo(int voiceNumber, float max)
     }
 }
 
+void MuMaterial::RemoveBlankNotes(int voiceNumber)
+{
+    lastError.Set(MuERROR_NONE);
+    
+    if(voiceNumber < NumberOfVoices())
+    {
+        voices[voiceNumber].RemoveBlankNotes();
+    }
+}
 
 // File IO
 // reads a Csound score (.sco) into material object

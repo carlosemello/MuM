@@ -67,23 +67,23 @@ const short ASCENDING = 1;
 const short DESCENDING = -1;
 
 // Notas
-const short C = 0; 
+const short C_NAT = 0;
 const short C_SHARP = 1; 
 const short D_FLAT = 1;
-const short D = 2; 
+const short D_NAT = 2;
 const short D_SHARP = 3; 
 const short E_FLAT = 3; 
-const short E = 4; 
-const short F = 5; 
+const short E_NAT = 4;
+const short F_NAT = 5;
 const short F_SHARP = 6; 
 const short G_FLAT = 6; 
-const short G = 7; 
+const short G_NAT = 7;
 const short G_SHARP = 8; 
 const short A_FLAT = 8; 
-const short A = 9; 
+const short A_NAT = 9;
 const short A_SHARP = 10; 
 const short B_FLAT = 10; 
-const short B = 11; 
+const short B_NAT = 11;
 
 // DEGREES
 
@@ -1794,8 +1794,25 @@ class MuMaterial
 	 * dur (float) - duration in seconds
 	 *
 	 **/
-
     void Decrescendo(int voiceNumber, float max);
+    
+    /**
+	 *
+	 * @brief
+	 * removes blank notes from selected voice
+	 *
+	 * @details
+	 * Removes every note that contains pitch == 0 or amp == 0 from selected 
+     * voice. These notes are usually used to mark pauses in applications
+     * that require explicit rests. Since MuM uses explicit start times for
+     * every note, deleting these notes won't affect rhythm or performance...
+     *
+	 * @param
+	 * voiceNumber (int) - voice index
+	 *
+	 **/
+    void RemoveBlankNotes(int voiceNumber);
+
     
     // File IO
 	
