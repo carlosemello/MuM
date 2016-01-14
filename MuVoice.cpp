@@ -382,7 +382,7 @@ MuError MuVoice::RemoveLastNote(void)
             MuNote * temp, * prev;
             
             // go through the list...
-            temp = noteList;
+            prev = temp = noteList;
             while(temp->Next())
             {
                 prev = temp;

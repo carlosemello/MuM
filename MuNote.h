@@ -24,7 +24,7 @@
  **/
 
 #ifndef _MU__NOTE_H_
-#define _MU_NOTE_H_
+#define _MU__NOTE_H_
 
 #include "MuParamBlock.h"
 #include <iostream>

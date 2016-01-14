@@ -23,7 +23,7 @@
  **/
 
 #ifndef _Mu_PARAM_BLOCK_H_
-#define _Mu_PARAM_BLOCK_H
+#define _Mu_PARAM_BLOCK_H_
 
 #include <iostream>
 #include "MuError.h"

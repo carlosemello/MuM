@@ -790,7 +790,7 @@ MuNote MuMaterial::GetFirstNote( void )
 	bool foundNote = false;
 	MuError err;
     MuNote theNote, currNote;
-	float start;
+	float start = 0;
 	int n = numOfVoices;
 	int i;
 	
