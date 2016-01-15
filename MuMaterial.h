@@ -114,8 +114,8 @@ const short EIGHTH_DEGREE = 7;
  * 
  * Voices inside Materials 
  *  
- * MuMaterial features methods which allows the user to organize its internal structure in 
- * separate voices, for use with diferent instruments or tracks. However, while these 
+ * MuMaterial features methods which allow the user to organize its internal structure in
+ * separate voices, for use with different instruments or tracks. However, while these
  * methods include facilities for most desirable routine operations, like  creating, removing, 
  * copying and clearing each voice independently, the API use is often more intuitive when 
  * these tasks are handled transparently by the object. MuMaterial was designed to required 
