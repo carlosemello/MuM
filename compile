@@ -1,0 +1,21 @@
+# =====================
+# Compilar MuM
+# =====================
+echo "Compilando MuUtil..."
+g++ -c MuUtil.cpp
+echo "Compilando MuError..."
+g++ -c MuError.cpp
+echo "Compilando MuParamBlock..."
+g++ -c MuParamBlock.cpp
+echo "Compilando MuNote..."
+g++ -c MuNote.cpp
+echo "Compilando MuVoice..."
+g++ -c MuVoice.cpp
+echo "Compilando MuMaterial..."
+g++ -c MuMaterial.cpp
+echo "Compilando Main..."
+g++ -o teste main.cpp MuUtil.o MuError.o MuParamBlock.o MuNote.o MuVoice.o MuMaterial.o
+echo "Apagando arquivos intermediarios..."
+rm *.o
+echo "Alterando permissoes do arquivo executavel..."
+chmod 755 teste
