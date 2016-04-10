@@ -2419,7 +2419,7 @@ void MuMaterial::Score(string fileName)	// [PUBLIC]
     {
         score << "; " << fileName << endl << endl;
         score << "; ========================================" << endl;
-        score << "; Funtion Tables:" << endl;
+        score << "; Function Tables:" << endl;
         score << "; ========================================" << endl;
         score << FunctionTables() << endl;
         score << "; ========================================" << endl;
