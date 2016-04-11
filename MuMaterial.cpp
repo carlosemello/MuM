@@ -1147,6 +1147,7 @@ void MuMaterial::Transpose(int voiceNumber, long startingNote, long endingNote, 
 // key ? { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 }
 // mode ? { MAJOR_MODE, MINOR_MODE }
 // degree ? { 1, 2, 3, 4, 5, 6, 7 }
+// direction ? { ASCENDING, DESCENDING }
 // ==============================================
 void MuMaterial::DiatonicTranspose( short key, short mode, short targetDegree, short direction )
 {	
@@ -1174,7 +1175,7 @@ void MuMaterial::DiatonicTranspose( short key, short mode, short targetDegree, s
 	}
 	
 	// Generate full scale for degree transposition...
-	for( i = 0, j = LOWEST_C; ( i < FULL_SCALE_SIZE ) && ( j < HIGHEST_C ); i += NUM_OF_SCALE_DEGREES, j += 12 )
+	for( i = 0, j = LOWEST_C; ( i < FULL_SCALE_SIZE ); i += NUM_OF_SCALE_DEGREES, j += 12 )
 	{
 		for( k = 0; k < NUM_OF_SCALE_DEGREES; k++ )
 			scale[ i + k ] = j + modePattern[ k ] + key;
@@ -1198,6 +1199,13 @@ void MuMaterial::DiatonicTranspose( short key, short mode, short targetDegree, s
 			if( lastError.Get() == MuERROR_NONE )
 			{
 				currDegree = Inside(tempNote.Pitch(), scale, FULL_SCALE_SIZE );
+                if(currDegree == -1)
+                {
+                    // if pitch is not found in scale, we cannot proceed,
+                    // because we are using currDegree as an array index.
+                    lastError = MuERROR_INVALID_SCALE_DEGREE;
+                    return;
+                }
 				currDegree += degreeChange;
 				tempNote.SetPitch( scale[ currDegree ] );
 				SetNote( i, j, tempNote );
