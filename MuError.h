@@ -23,6 +23,8 @@
 #define _MU_ERROR_H_
 
 #include <string>
+#include <stdlib.h>
+#include <stdio.h>
 using namespace std;
 
 //!@brief No Error - task successfully completed.

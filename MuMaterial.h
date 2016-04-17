@@ -52,8 +52,11 @@
 #include "MuVoice.h"
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <fstream>
 using namespace std;
+
+// MUSIC CONSTANTS:
 
 const short LOWEST_C = 24; 
 const short HIGHEST_C = 108; 
@@ -66,7 +69,7 @@ const short MINOR_MODE = 1;
 const short ASCENDING = 1; 
 const short DESCENDING = -1;
 
-// Notas
+// NOTES
 const short C_NAT = 0;
 const short C_SHARP = 1; 
 const short D_FLAT = 1;
@@ -94,6 +97,10 @@ const short FOURTH_DEGREE = 4;
 const short FIFTH_DEGREE = 5;
 const short SIXTH_DEGREE = 6;
 const short EIGHTH_DEGREE = 7;
+
+// FILE PATHS
+
+#define CSOUND_PATH "/usr/local/bin/csound "
 
 /**
  * @class MuMaterial
@@ -181,6 +188,7 @@ class MuMaterial
     int numOfVoices;
 	
     string functionTables;
+    string csOptions;
 	
 	public:
     
@@ -291,6 +299,38 @@ class MuMaterial
 	 *
 	 **/
 	MuMaterial operator+( const MuMaterial & inMaterial );
+    
+    /**
+     * @brief Addition and Assignment Operator - append to existing material content
+     *
+     * @details
+     * Appends contents of input object to the end of receiving material
+     *
+     * @param
+     * inMaterial (MuMaterial&) - material object being appended
+     *
+     * @return
+     * MuMaterial& - the resulting material
+     *
+     **/
+    MuMaterial & operator+=( const MuMaterial & inMaterial );
+    
+    /**
+     * @brief Appends inNote to voice 0 of receiving material
+     *
+     * @details
+     * input note is appended to the end of receiving material. This
+     * insertiion point is calculated from the ending time of the
+     * last sounding note in the material, with a call to Dur(). The
+     * note is allways appended to voice 0.
+     *
+     * @param
+     * inNote (MuNote &) - note to be appended
+     * @return
+     * MuMaterial & - reference to receiving material
+     *
+     **/
+    MuMaterial & operator+=( const MuNote & inNote );
     
 	/** 
 	 * @brief Multiplication Operator - mix
@@ -605,7 +645,7 @@ class MuMaterial
 	 * @param
 	 * inMaterial (MuMaterial) - input music material
 	 * @param
-	 * inVoice (int) - voice index	 
+	 * inVoice (int) - voice index
 	 *
 	 **/			
 	void Append(int voiceNumber, const MuMaterial & inMaterial, int inVoice);
@@ -1843,9 +1883,27 @@ class MuMaterial
 	**/
     void LoadScore(string fileName);
 	
+    /**
+     * @brief
+     * Generates orchestra definition for Csound playback
+     *
+     * @details
+     * Creates an orchestra file with default instruments for testing output scores. The
+     * orquestra contains four instruments with diverse wave forms and overall amplitude envelopes.
+     * Instruments may vary with MuM versions, so it is wise to study and test the orchestra
+     * before using it. In any case, this orchestra's instruments will allways be able to play
+     * standard note output which contains only the basic five parameters per note (instr, start,
+     * dur, pitch, amp).
+     * Obs.: Instruments need to use the default function tables defined by SetDefaultFunctionTables().
+     *
+     * @return
+     * standard C++ string object containing the entire Csound orchestra
+     **/
+     string Orchestra(void);
+    
 	/**
 	 * @brief
-	 * Writes orchestra file
+	 * Writes Csound orchestra to file
 	 * 
 	 * @details
 	 * Creates an orchestra file with default instruments for testing output scores. The  
@@ -1856,15 +1914,17 @@ class MuMaterial
 	 * dur, pitch, amp).
 	 * Obs.: Instruments need to use the default function tables defined by SetDefaultFunctionTables().
 	 *
-	 * @param
-	 * fileName (string) - path to file, wrapped in a standard C++ string object
 	 *
+     @param
+     * fileName (string) - path to file, wrapped in a standard C++ string object
+     *
 	 **/
     void Orchestra(string fileName);
 	
+    
 	/**
 	 * @brief
-	 * Writes score file of entire content
+	 * Generates score definition for Csound playback
 	 * 
 	 * @details
 	 * Generates a Csound score with every note in material. Each note converts its five basic 
@@ -1879,11 +1939,106 @@ class MuMaterial
 	 *
 	 * i1  0.0  2.5  7.00  0.5 
 	 *
-	 * @param
-	 * fileName (string) - path to file inside string object
+	 * @return
+	 * standard C++ string object containing the entire csound score
 	 *
-	 **/	
-    void Score(string fileName);		
+	 **/
+    string Score(void);
+    
+    /**
+     * @brief
+     * Writes Csound score to file
+     *
+     * @details
+     * Writes a Csound score file with every note in material. Each note converts its five basic
+     * parameters to a standard note line where p4 = pitch (in Csound cpspch() format) and p5 =
+     * amplitude between 0.0 and 1.0.
+     *
+     * Example:
+     *
+     * [voice 0] ==> [note instr=1, start=0.0, dur=2.5, pitch=48, amp=0.5]
+     *
+     * becomes
+     *
+     * i1  0.0  2.5  7.00  0.5
+     *
+     * @param
+     * fileName (string) - path to file inside string object
+     *
+     **/
+     void Score(string fileName);
+    
+    /**
+     * @brief
+     * defines a string containing the rendering flags to be used with Csound
+     *
+     * @details
+     * Any valid Csound option flags can be inserted here in string format.
+     * These options are used with the Csound command and inside the Csd() output.
+     * The call replaces any prior flag strings inside the material.
+     *
+     * @param
+     * a string containing option flags to be used in csd file, for Csound rendering
+     *
+     **/
+    void SetCsOptions(string options);
+
+    
+    /**
+     * @brief
+     * returns the material's data for playback in Csound .csd format
+     *
+     * @details
+     * Generates Csound playback information from material using Orchestra() and
+     * Score() functions. Both these functions return strings which are then used
+     * to assemble the XML based .csd file.
+     *
+     * Obs.1: Csound rendering options SetCsOptions() should be called beore Csd()
+     * Obs.2: SetFuntionTables() or Se DefaultFunctionTables() should be called
+     * before Csd()
+     *
+     * @return
+     * a string containing a csd formatted document.
+     *
+     **/
+    string Csd(void);
+    
+    /**
+     * @brief
+     * writes the material's data to a file in .csd format
+     *
+     * @details
+     * Generates Csound playback information from material using Orchestra() and
+     * Score() functions. Both these functions return strings which are then used
+     * to assemble the XML based .csd file.
+     *
+     * Obs.1: Csound rendering options SetCsOptions() should be called before Csd()
+     * Obs.2: SetFuntionTables() or Se DefaultFunctionTables() should be called
+     * before Csd()
+     *
+     * @return
+     * a string containing a csd formatted document.
+     *
+     **/
+    void Csd(string fileName);
+
+    /**
+     * @brief
+     * creates a csd file and calls Csound to render the file
+     *
+     * @details
+     *
+     Generates Csound playback information from material using Orchestra() and
+     * Score() functions. Both these functions return strings which are then used
+     * to assemble the XML based .csd file. After that, this method makes a
+     * system call to start Csound using the generate file.
+     *
+     * @return
+     * a string containing a csd formatted document.
+     *
+     **/
+    void PlaybackWithCsound(string fileName);
+
 	 
     // UTILITIES
 	

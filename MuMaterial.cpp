@@ -28,6 +28,7 @@ MuMaterial::MuMaterial(void)
     voices = NULL;
     numOfVoices = 0;
     lastError.Set(MuERROR_NONE);
+    csOptions =  "-odac -d -O null";
 }
 
 // Copy
@@ -40,14 +41,15 @@ MuMaterial::MuMaterial(const MuMaterial & inMaterial)
 	
     if(inMaterial.voices != NULL)
     {
-        voices = new MuVoice[inMaterial.numOfVoices];
+        n = inMaterial.numOfVoices;
+        voices = new MuVoice[n];
         if(voices)
         {
-            n = inMaterial.numOfVoices;
             for(int i = 0; i < n; i++)
 				voices[i] = inMaterial.voices[i];
 			numOfVoices = n;
 			functionTables = inMaterial.functionTables;
+            csOptions = inMaterial.csOptions;
         }
         else
         {
@@ -80,6 +82,8 @@ MuMaterial::MuMaterial( const MuMaterial & inMaterial, int fromVoice )
             {
                 voices[0] = inMaterial.voices[fromVoice];
                 numOfVoices = 1;
+                functionTables = inMaterial.functionTables;
+                csOptions = inMaterial.csOptions;
             }
             else
             {
@@ -111,19 +115,21 @@ MuMaterial & MuMaterial::operator=(const MuMaterial & inMaterial)		// [PUBLIC]
 	// delete old storage...
 	delete [] voices;
 	voices = NULL;
-	numOfVoices = 0;
+	int n = 0;
 	// check for input content...
 	if(inMaterial.voices != NULL)
     {
-        voices = new MuVoice[inMaterial.numOfVoices];
+        n = inMaterial.numOfVoices;
+        voices = new MuVoice[n];
         if(voices)
         {
-            numOfVoices = inMaterial.numOfVoices;
-            for(i = 0; i < numOfVoices; i++)
+            for(i = 0; i < n; i++)
 			{
 				voices[i] = inMaterial.voices[i];
 			}
+            numOfVoices = n;
 			functionTables = inMaterial.functionTables;
+            csOptions = inMaterial.csOptions;
         }
 		else
 		{
@@ -191,6 +197,45 @@ MuMaterial  MuMaterial::operator+(const MuMaterial & inMaterial)		// [PUBLIC]
 	temp.Mix(*this);
 	
 	return temp;
+}
+
+ MuMaterial & MuMaterial::operator+=( const MuMaterial & inMaterial )
+{
+    MuError err(MuERROR_NONE);
+    lastError.Set(MuERROR_NONE);
+    int i;
+    float em = 0.0; // end of material
+    float ev = 0.0;	// end of voice
+    int n = numOfVoices;
+    MuMaterial temp = inMaterial;
+    
+    // calculate end of material, comparing
+    //  ending point for each voice
+    for(i = 0; i < n; i++)
+    {
+        ev = voices[i].End();
+        if( ev > em )
+            em = ev;
+    }
+    
+    // Offset each voice of inMaterial to end of material...
+    temp.Move(em);
+    
+    // MOVE EACH VOICE OF InMATERIAL TO END
+    // MIX TWO MATERIALS
+    this->Mix(temp);
+    
+    return *this;
+}
+
+ MuMaterial & MuMaterial::operator+=( const MuNote & inNote )
+{
+    MuNote temp = inNote;
+    
+    temp.SetStart(Dur());
+    AddNote(temp);
+    
+    return *this;
 }
 
 // Operator * => Mixes two materials
@@ -2334,122 +2379,149 @@ void MuMaterial::LoadScore(string fileName)	// [PUBLIC]
 		lastError.Set(MuERROR_COULDNT_OPEN_INPUT_FILE);
 	}
 }
+
+
+// Generates Orchestra Definitions...
+string MuMaterial::Orchestra(void)	// [PUBLIC]
+{
+    lastError.Set(MuERROR_NONE);
+    MuError err(MuERROR_NONE);
+    stringstream orc;
+
+    orc << "; ====================" << endl;
+    orc << "sr = 44100" << endl;
+    orc << "kr = 441" << endl;
+    orc << "ksmps = 100" << endl;
+    orc << "nchnls = 2" << endl;
+    orc << "; ====================" << endl;
+    
+    orc << endl;
+    
+    orc << "; =======================================" << endl;
+    orc << "instr 1 ; (short atack, long release)" << endl;
+    orc << "; =======================================" << endl;
+    orc << "iamp = p5 * 25000" << endl;
+    orc << "ifreq = cpspch(p4)" << endl;
+    orc << "itable = 1" << endl;
+    orc << endl;
+    orc << "kamp linen 1.0, 0.07, p3, (0.8 * p3)" << endl;
+    orc << "asig oscil iamp, ifreq, itable" << endl;
+    orc << "aout = kamp * asig" << endl;
+    orc << "outs aout, aout" << endl;
+    orc << "; =======================================" << endl;
+    orc << "endin" << endl;
+    orc << "; =======================================" << endl;
+    
+    orc << "; =======================================" << endl;
+    orc << "instr 2 ; (medium atack, short release)" << endl;
+    orc << "; =======================================" << endl;
+    orc << "iamp = p5 * 25000" << endl;
+    orc << "ifreq = cpspch(p4)" << endl;
+    orc << "itable = 2" << endl;
+    orc << endl;
+    orc << "kamp linen 1.0, 0.15, p3, (0.1 * p3)" << endl;
+    orc << "asig oscil iamp, ifreq, itable" << endl;
+    orc << "aout = kamp * asig" << endl;
+    orc << "outs aout, aout" << endl;
+    orc << "; =======================================" << endl;
+    orc << "endin" << endl;
+    orc << "; =======================================" << endl;
+    
+    orc << "; =======================================" << endl;
+    orc << "instr 3 ; (long atack, long release)" << endl;
+    orc << "; =======================================" << endl;
+    orc << "iamp = p5 * 25000" << endl;
+    orc << "ifreq = cpspch(p4)" << endl;
+    orc << "itable = 3" << endl;
+    orc << endl;
+    orc << "kamp linen 1.0, (0.4 * p3), p3, (0.5 * p3)" << endl;
+    orc << "asig oscil iamp, ifreq, itable" << endl;
+    orc << "aout = kamp * asig" << endl;
+    orc << "outs aout, aout" << endl;
+    orc << "; =======================================" << endl;
+    orc << "endin" << endl;
+    orc << "; =======================================" << endl;
+    
+    orc << "; =======================================" << endl;
+    orc << "instr 4 ; (short atack, medium release)" << endl;
+    orc << "; =======================================" << endl;
+    orc << "iamp = p5 * 25000" << endl;
+    orc << "ifreq = cpspch(p4)" << endl;
+    orc << "itable = 4" << endl;
+    orc << endl;
+    orc << "kamp linen 1.0, 0.08, p3, (0.4 * p3)" << endl;
+    orc << "asig oscil iamp, ifreq, itable" << endl;
+    orc << "aout = kamp * asig" << endl;
+    orc << "outs aout, aout" << endl;
+    orc << "; =======================================" << endl;
+    orc << "endin" << endl;
+    orc << "; =======================================" << endl;
+    
+    return orc.str();
+}
+
 // Writes orchestra file
 void MuMaterial::Orchestra(string fileName)	// [PUBLIC]
 {
     lastError.Set(MuERROR_NONE);
-	MuError err(MuERROR_NONE);
+    MuError err(MuERROR_NONE);
     fileName.append(".orc");
-	ofstream orc(fileName.c_str(), ios_base::out | ios_base::trunc);
+    ofstream orc(fileName.c_str(), ios_base::out | ios_base::trunc);
     
     if(orc)
     {
-		orc << "; ====================" << endl;
-		orc << "sr = 44100" << endl;
-		orc << "kr = 441" << endl;
-		orc << "ksmps = 100" << endl;
-		orc << "nchnls = 2" << endl;
-		orc << "; ====================" << endl;
-		
-		orc << endl;
-		
-		orc << "; =======================================" << endl;
-		orc << "instr 1 ; (short atack, long release)" << endl;
-		orc << "; =======================================" << endl;
-		orc << "iamp = p5 * 30000" << endl;
-		orc << "ifreq = cpspch(p4)" << endl;
-		orc << "itable = 1" << endl;
-		orc << endl;
-		orc << "kamp linen 1.0, 0.02, p3, (0.8 * p3)" << endl;
-		orc << "asig oscil iamp, ifreq, itable" << endl;
-		orc << "aout = kamp * asig" << endl;
-		orc << "outs aout, aout" << endl;
-		orc << "; =======================================" << endl;
-		orc << "endin" << endl;
-		orc << "; =======================================" << endl;
-		
-		orc << "; =======================================" << endl;
-		orc << "instr 2 ; (medium atack, short release)" << endl;
-		orc << "; =======================================" << endl;
-		orc << "iamp = p5 * 30000" << endl;
-		orc << "ifreq = cpspch(p4)" << endl;
-		orc << "itable = 2" << endl;
-		orc << endl;
-		orc << "kamp linen 1.0, 0.1, p3, (0.1 * p3)" << endl;
-		orc << "asig oscil iamp, ifreq, itable" << endl;
-		orc << "aout = kamp * asig" << endl;
-		orc << "outs aout, aout" << endl;
-		orc << "; =======================================" << endl;
-		orc << "endin" << endl;
-		orc << "; =======================================" << endl;
-		
-		orc << "; =======================================" << endl;
-		orc << "instr 3 ; (long atack, long release)" << endl;
-		orc << "; =======================================" << endl;
-		orc << "iamp = p5 * 30000" << endl;
-		orc << "ifreq = cpspch(p4)" << endl;
-		orc << "itable = 3" << endl;
-		orc << endl;
-		orc << "kamp linen 1.0, (0.3 * p3), p3, (0.5 * p3)" << endl;
-		orc << "asig oscil iamp, ifreq, itable" << endl;
-		orc << "aout = kamp * asig" << endl;
-		orc << "outs aout, aout" << endl;
-		orc << "; =======================================" << endl;
-		orc << "endin" << endl;
-		orc << "; =======================================" << endl;
-		
-		orc << "; =======================================" << endl;
-		orc << "instr 4 ; (short atack, medium release)" << endl;
-		orc << "; =======================================" << endl;
-		orc << "iamp = p5 * 30000" << endl;
-		orc << "ifreq = cpspch(p4)" << endl;
-		orc << "itable = 4" << endl;
-		orc << endl;
-		orc << "kamp linen 1.0, 0.03, p3, (0.4 * p3)" << endl;
-		orc << "asig oscil iamp, ifreq, itable" << endl;
-		orc << "aout = kamp * asig" << endl;
-		orc << "outs aout, aout" << endl;
-		orc << "; =======================================" << endl;
-		orc << "endin" << endl;
-		orc << "; =======================================" << endl;
-	
-		orc.close();
-	}
+        orc << Orchestra();
+        orc.close();
+    }
+    else
+        lastError.Set(MuERROR_COULDNT_OPEN_OUTPUT_FILE);
 }
-void MuMaterial::Score(string fileName)	// [PUBLIC]
+
+
+string MuMaterial::Score(void)
 {
     lastError.Set(MuERROR_NONE);
-	MuError err(MuERROR_NONE);
-    fileName.append(".sco");
-	ofstream score(fileName.c_str(), ios_base::out | ios_base::trunc);
+    MuError err(MuERROR_NONE);
+    stringstream score;
+    string ftables = FunctionTables();
     
-    if(score)
+    if(ftables != "")
     {
-        score << "; " << fileName << endl << endl;
         score << "; ========================================" << endl;
         score << "; Function Tables:" << endl;
         score << "; ========================================" << endl;
-        score << FunctionTables() << endl;
-        score << "; ========================================" << endl;
-        score << endl;
-        
+        score <<  ftables << endl;
+        score << "; ========================================" << endl << endl;
+    }
+    
+    if( (voices != NULL) && (numOfVoices > 0) )
+    {
         for(int i = 0; i < numOfVoices; i++)
         {
-            long num = voices[i].NumberOfNotes();
             MuNote theNote;
+            long num = voices[i].NumberOfNotes();
             
             score << "; ========================================" << endl;
             score << "; VOICE: " << i << ", Instr.: " << voices[i].InstrumentNumber() << endl;
             score << "; ========================================" << endl;
             score << endl;
+            
             for(long j = 0; j < num; j++)
             {
                 err = voices[i].GetNote( j, &theNote );
                 if(err.Get() != MuERROR_NONE)
-                    cout << err.Message();
+                {
+                    lastError.Set(err);
+                    break;
+                }
                 else
                     score << theNote.CsString() << endl;
             }
+            
+            // if there was an error in the inner loop, bail the outer loop also:
+            if(lastError.Get() != MuERROR_NONE)
+                break;
+            
             score << endl;
             score << "; ========================================" << endl;
             score << "; END VOICE " << i << endl;
@@ -2458,9 +2530,97 @@ void MuMaterial::Score(string fileName)	// [PUBLIC]
         }
     }
     else
-        lastError.Set(MuERROR_COULDNT_OPEN_OUTPUT_FILE);
+        lastError.Set(MuERROR_MATERIAL_IS_EMPTY);
     
-    score.close();
+    return score.str();
+}
+
+void MuMaterial::Score(string fileName)	// [PUBLIC]
+{
+    lastError.Set(MuERROR_NONE);
+	MuError err(MuERROR_NONE);
+    fileName.append(".sco");
+    
+	ofstream score(fileName.c_str(), ios_base::out | ios_base::trunc);
+    if(score)
+    {
+        string scoString = Score();
+        if(lastError.Get() == MuERROR_NONE)
+            score << scoString;
+        score.close();
+    }
+    else
+        lastError.Set(MuERROR_COULDNT_OPEN_OUTPUT_FILE);
+}
+
+void MuMaterial::SetCsOptions(string options)
+{
+    csOptions = options;
+}
+
+string MuMaterial::Csd(void)
+{
+    stringstream csd;
+    
+    csd << "<CsoundSynthesizer>" << endl;
+    
+    csd << "<CsOptions>" << endl;
+    csd << csOptions << endl;
+    csd << "</CsOptions>" << endl;
+    
+    csd << "<CsInstruments>" << endl;
+    csd << Orchestra();
+    csd << "</CsInstruments>" << endl;
+    
+    csd << "<CsScore>" << endl;
+    csd << Score();
+    csd << "</CsScore>" << endl;
+    
+    csd << "</CsoundSynthesizer>" << endl;
+    
+    return csd.str();
+}
+
+
+void MuMaterial::Csd(string fileName)
+{
+    lastError.Set(MuERROR_NONE);
+    MuError err(MuERROR_NONE);
+    fileName.append(".csd");
+    
+    cout << endl << "Creating Csound File: "<< fileName << endl << endl;
+    
+    ofstream csd(fileName.c_str(), ios_base::out | ios_base::trunc);
+    if(csd)
+    {
+        csd << Csd();
+        csd.close();
+    }
+    else
+        lastError.Set(MuERROR_COULDNT_OPEN_OUTPUT_FILE);
+}
+
+
+void MuMaterial::PlaybackWithCsound(string fileName)
+{
+    SetDefaultFunctionTables();
+    
+    // Start by creating the csd file...
+    Csd(fileName);
+    
+    // If file creation succeeds, proceed to call Csound...
+    if(lastError.Get() == MuERROR_NONE)
+    {
+        cout << endl << "Playing with Csound..." << endl << endl;;
+        string command;
+        command = CSOUND_PATH;
+        command += " ";
+        command += csOptions;
+        command += " ";
+        command += fileName;
+        command += ".csd ";
+        system(command.c_str());
+    }
 }
 
 // Utilities
@@ -2509,34 +2669,11 @@ void MuMaterial::Clear(void)
 
 void MuMaterial::Show( void )
 {
-	int v, i;
-	long n, j;
-	MuNote theNote;
-	MuError err;
-	
-	if( (voices != NULL) && (numOfVoices > 0) )
-	{
-		v = numOfVoices;
-		
-		for(i = 0; i < v; i++)
-		{
-			n = voices[i].NumberOfNotes();
-			
-			cout << endl << endl << "; ===================================" << endl;
-			cout << "; VOICE: " << i << ", Instr.: " << voices[i].InstrumentNumber() << endl;
-			cout << "; ===================================" << endl;
-			cout << endl;
-			for(j = 0; j < n; j++)
-			{
-				err = voices[i].GetNote( j, &theNote );
-				if(err.Get() != MuERROR_NONE)
-					cout << err.Message();
-				else
-					cout << theNote.CsString() << endl;
-			}
-			cout << endl << endl;
-		}
-	}
+    string score = Score();
+    if(lastError.Get() == MuERROR_NONE)
+        cout << score;
+    else
+        cout << lastError.Message();
 }
 
 short MuMaterial::CsoundToLocalPitch(cs_pitch inPitch)	// [PUBLIC]
