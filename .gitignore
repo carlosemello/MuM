@@ -1,0 +1,8 @@
+*.swp
+*.o
+*~
+*.orc
+*.sco
+*.a
+*.d
+test/test
