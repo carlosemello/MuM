@@ -27,9 +27,7 @@
 #define _MU_NOTE_H_
 
 #include "MuParamBlock.h"
-#include <iostream>
-#include <string>
-using namespace std;
+
 
 // Constants
 

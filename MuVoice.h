@@ -36,9 +36,7 @@
 #define _MU_VOICE_H_
 
 #include "MuNote.h"
-#include <iostream>
-#include <string>
-using namespace std;
+
 
 const short FIRST_NOTE_INDEX = 0;
 
@@ -409,7 +407,7 @@ class MuVoice
 	 *
 	 * @details
 	 * InstrumentNumber() returns the instrument assigned to this voice;
-	 * a value of 0 means no instrument has been assignec to this voice yet.
+	 * a value of 0 means no instrument has been assigned to this voice yet.
 	 * A voice's instrument number is used to assign instrument definitions
 	 * to notes which are inserted in the voice and have no previous instrument
 	 * number.
@@ -426,11 +424,12 @@ class MuVoice
 	 * @details
 	 * SetInstrumentNumber() updates the instrument number assigned to the
 	 * voice and changes the instrument choices for every note accordingly.
-	 * This method is usually called before adding notes to the voice. 
-	 * When used afternote insertions, SetInstrumentNumber() will force  
-	 * every note in the note list to reset its instrument choice to the 
-	 * requested number, therefore eliminating any previous instrument 
-	 * definitions in the existing notes.
+	 * SetInstrumentNumber() will force every note inside the note list to reset
+     * its instrument choice to the requested number, therefore eliminating 
+     * any previous instrument definitions in the existing notes.
+     * Notes added after this call will also conform to the instrument number
+     * defined by SetInstrumentNumber() if they had no prior instrument choice.
+     *
 	 * Valid instrument range for inInstrNum is 1 through 128, to allow compatibility
 	 * with GM program change format used by MIDI output. If an instrument
 	 * number outside this range is provided, SetInstrumentNumber will default 

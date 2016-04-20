@@ -23,11 +23,7 @@
 #ifndef _MU_UTIL_H_
 #define _MU_UTIL_H_
 
-#include <stdlib.h>
-#include <time.h>
-#include <iostream>
-using namespace std;
-
+#include "MuError.h"
 
 // DEFS
 

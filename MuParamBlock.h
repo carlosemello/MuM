@@ -25,8 +25,7 @@
 #ifndef _MU_PARAM_BLOCK_H_
 #define _MU_PARAM_BLOCK_H_
 
-#include <iostream>
-#include "MuError.h"
+//#include "MuError.h"
 #include "MuUtil.h"
 
 //!@brief unsigned byte

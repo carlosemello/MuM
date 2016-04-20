@@ -22,9 +22,13 @@
 #ifndef _MU_ERROR_H_
 #define _MU_ERROR_H_
 
-#include <string>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
+#include <string>
+#include <iostream>
+#include <sstream>
+#include <fstream>
 using namespace std;
 
 //!@brief No Error - task successfully completed.

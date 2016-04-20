@@ -50,11 +50,7 @@
 #define _MU_MATERIAL_H_
 
 #include "MuVoice.h"
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <fstream>
-using namespace std;
+
 
 // MUSIC CONSTANTS:
 
@@ -450,18 +446,36 @@ class MuMaterial
 	 * 
 	 **/
 	int GetVoiceNumberForInstrument(int instrNum);
+    
+    /**
+     * @brief Returns instrument number set for for requested voice
+     *
+     * @details
+     * InstrumentNumber() Returns the internal instrument number choice for voice voiceNumber
+     * If material is empty or if voiceNumber is not a valid voice index, InstrumentNumber()
+     * issues and error and terminates. 
+     *
+     * @param
+     * voiceNumber (int) - index of voice to be queried
+     * 
+     **/
+    uShort InstrumentNumber(int voiceNumber);
 	
-	//  (should be used before adding notes)
 	/**
 	 * @brief Sets instrument number for requested voice
 	 *
 	 * @details
-	 * SetInstrument() Sets the internal instrument number choice for voice voiceNumber to instrument instrNum. 
-	 * If material is empty or if voiceNumber is not a valid voice index, SetInstrument() issues and 
-	 * error and terminates. This method should normally be used before adding notes to the 
-	 * target voice. This ensures that every note will have its instrument number set to instrNumNotes 
-	 * which are added before this call will retain their original instrument numbers.   
-	 *
+	 * SetInstrument() Sets the internal instrument number choice for voice voiceNumber to instrument .
+	 * instrNum. If the material is empty or if voiceNumber is not a valid voice index, 	 
+     * SetInstrument() issues an error and terminates.
+     * If SetInstrument() is called on a material that contains previous notes, ALL notes will have their
+     * instrument set to the new number. Every note which gets added after this call and does not contain 
+     * an instrument definition, will have its instrument field set to the number provided by 
+     * SetInstrument(). However, new added notes which do contain an instrument choice preserve 
+     * their instrument definition when added to material. Therefore, if there is a need for multiple 
+     * instruments in the same voice, it is best to issueinstrument assignments manually, that is, 
+     * on a note to note basis, instead of using SetInstrument().
+     *
 	 * @param
 	 * voiceNumber (int) - index of voice to be set
 	 * @param

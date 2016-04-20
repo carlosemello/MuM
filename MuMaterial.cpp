@@ -336,6 +336,25 @@ int MuMaterial::GetVoiceNumberForInstrument(int instrNum)  // [PUBLIC]
     return -1;
 }
 
+uShort MuMaterial::InstrumentNumber(int voiceNumber)
+{
+    uShort instr = 0;
+    lastError.Set(MuERROR_NONE);
+    if(voices != NULL)
+    {
+        if( ( voiceNumber >= 0 ) && ( voiceNumber < numOfVoices ) )
+        {
+            instr = voices[voiceNumber].InstrumentNumber();
+        }
+        else
+            lastError.Set(MuERROR_INVALID_VOICE_NUMBER);
+    }
+    else
+        lastError.Set(MuERROR_MATERIAL_IS_EMPTY);
+    
+    return instr;
+}
+
 void MuMaterial::SetInstrument(int voiceNumber, uShort instrNum)
 {
 	lastError.Set(MuERROR_NONE);
@@ -2033,11 +2052,6 @@ void MuMaterial::MajorSeventhChord(int voiceNumber, float dur)	// [PUBLIC]
     note.SetStart(3.0);
     note.SetPitch(71);
 	AddNote(voiceNumber, note);
-    
-    
-    
-   
-
 }
 
 
@@ -2404,7 +2418,7 @@ string MuMaterial::Orchestra(void)	// [PUBLIC]
     orc << "ifreq = cpspch(p4)" << endl;
     orc << "itable = 1" << endl;
     orc << endl;
-    orc << "kamp linen 1.0, 0.07, p3, (0.8 * p3)" << endl;
+    orc << "kamp linen 1.0, 0.05, p3, (0.8 * p3)" << endl;
     orc << "asig oscil iamp, ifreq, itable" << endl;
     orc << "aout = kamp * asig" << endl;
     orc << "outs aout, aout" << endl;
@@ -2419,7 +2433,7 @@ string MuMaterial::Orchestra(void)	// [PUBLIC]
     orc << "ifreq = cpspch(p4)" << endl;
     orc << "itable = 2" << endl;
     orc << endl;
-    orc << "kamp linen 1.0, 0.15, p3, (0.1 * p3)" << endl;
+    orc << "kamp linen 1.0, 0.1, p3, (0.1 * p3)" << endl;
     orc << "asig oscil iamp, ifreq, itable" << endl;
     orc << "aout = kamp * asig" << endl;
     orc << "outs aout, aout" << endl;
@@ -2434,7 +2448,7 @@ string MuMaterial::Orchestra(void)	// [PUBLIC]
     orc << "ifreq = cpspch(p4)" << endl;
     orc << "itable = 3" << endl;
     orc << endl;
-    orc << "kamp linen 1.0, (0.4 * p3), p3, (0.5 * p3)" << endl;
+    orc << "kamp linen 1.0, (0.4 * p3), p3, (0.3 * p3)" << endl;
     orc << "asig oscil iamp, ifreq, itable" << endl;
     orc << "aout = kamp * asig" << endl;
     orc << "outs aout, aout" << endl;
@@ -2449,7 +2463,7 @@ string MuMaterial::Orchestra(void)	// [PUBLIC]
     orc << "ifreq = cpspch(p4)" << endl;
     orc << "itable = 4" << endl;
     orc << endl;
-    orc << "kamp linen 1.0, 0.08, p3, (0.4 * p3)" << endl;
+    orc << "kamp linen 1.0, 0.06, p3, (0.4 * p3)" << endl;
     orc << "asig oscil iamp, ifreq, itable" << endl;
     orc << "aout = kamp * asig" << endl;
     orc << "outs aout, aout" << endl;
@@ -2670,10 +2684,15 @@ void MuMaterial::Clear(void)
 void MuMaterial::Show( void )
 {
     string score = Score();
+    
+    cout << endl;
+    
     if(lastError.Get() == MuERROR_NONE)
         cout << score;
     else
         cout << lastError.Message();
+    
+    cout << endl;
 }
 
 short MuMaterial::CsoundToLocalPitch(cs_pitch inPitch)	// [PUBLIC]
