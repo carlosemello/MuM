@@ -2213,6 +2213,8 @@ class MuMaterial
 	 *
 	 **/
      MuNote CreateNoteFromCsoundLine(char * inLine);
+     
+     void writeSMF(string filename);
     
     // ERROR MANAGEMENT
 	
