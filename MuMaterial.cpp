@@ -2845,6 +2845,7 @@ MuNote MuMaterial::CreateNoteFromCsoundLine(char * inLine)	// [PUBLIC]
 void MuMaterial::writeSMF(string filename){
 	ofstream midiFile;
 	midiFile.open(filename.c_str(), ios::binary); 
+
 	
 	int ticksPerSecond = 96; // this means that the quarter note is 96th part of a second.
 							 // In the future, this would be set by the user.
@@ -2957,6 +2958,7 @@ void MuMaterial::writeSMF(string filename){
 				
 				buffer = preDelta & 0x7f;
 				while( (preDelta>>=7) ){
+
 					buffer<<=8;
 					buffer |= ((preDelta&0x7f) | 0x80);
 				}
