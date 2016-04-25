@@ -2957,7 +2957,7 @@ void MuMaterial::writeSMF(string filename){
 				
 				buffer = preDelta & 0x7f;
 				while( (preDelta>>=7) ){
-					buffer<<8;
+					buffer<<=8;
 					buffer |= ((preDelta&0x7f) | 0x80);
 				}
 				
