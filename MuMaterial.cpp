@@ -2840,6 +2840,205 @@ MuNote MuMaterial::CreateNoteFromCsoundLine(char * inLine)	// [PUBLIC]
     
     return theNote;
 }
+// Standard Midi File Output
+
+void MuMaterial::writeSMF(string filename){
+	ofstream midiFile;
+	midiFile.open(filename.c_str(), ios::binary); 
+	
+	int ticksPerSecond = 96; // this means that the quarter note is 96th part of a second.
+							 // In the future, this would be set by the user.
+							 // or better, the program itself could predict
+							 // a good number for this parameter
+	
+	//let's construct the list for the events ==========================
+	struct nodeEvent{
+		nodeEvent *next;
+		MuMIDIMessage msg;
+		unsigned long deltaStacked; //*Warning* It has Delta value in a four byte stack
+									//this is important for the algorithm to write
+									//variable length time with different sizes (1, 2, 3 or 4 bytes long)
+	};
+	
+	nodeEvent **root = new nodeEvent*[numOfVoices];
+	for(int i = 0; i < numOfVoices; i++){
+		root[i] = new nodeEvent;
+		root[i]->msg.status = 0;
+		root[i]->msg.data1 = 0;
+		root[i]->msg.data2 = 0;
+		root[i]->msg.time = 0;
+		root[i]->deltaStacked = 0;
+		root[i]->next = NULL;
+	}
+	
+	
+	nodeEvent *currentNote;
+	nodeEvent *searchPointer;
+	nodeEvent *tempPointer;
+	searchPointer = NULL;
+	
+	MuNote temp;
+	MuMIDIMessage tempMsg;
+	
+	for(int i = 0; i < numOfVoices; i++){
+		int numberOfNotes = NumberOfNotes(i);
+		currentNote = root[i];
+		
+		for(int j = 0; j < numberOfNotes; j++){
+			voices[i].GetNote(j,&temp);
+			//Note On
+			tempMsg.status = 0x90;
+			tempMsg.data1 = temp.Pitch();
+			tempMsg.data2 = temp.Amp()*127;
+			tempMsg.time = temp.Start();
+			
+			//insertNoteOn
+			if(currentNote->next == NULL) //Only occurs if list is still empty
+			{
+				currentNote->next = new nodeEvent;
+				currentNote = currentNote->next;
+				currentNote->next = NULL;
+				currentNote->msg = tempMsg;
+			}
+			else
+			{
+				searchPointer = currentNote;
+				
+				while(searchPointer->next != NULL && searchPointer->next->msg.time < tempMsg.time) 
+					searchPointer = searchPointer->next;
+				
+				tempPointer = searchPointer->next;
+				
+				searchPointer->next = new nodeEvent;
+				searchPointer->next->next = tempPointer;
+				searchPointer->next->msg = tempMsg;
+				
+				//New NoteOns and NoteOffs will always occur after this new noteOn
+				currentNote = searchPointer->next; 
+			}
+			//Note Off
+			tempMsg.status = 0x80;
+			tempMsg.time = temp.End();
+			
+			//insert NoteOff
+			searchPointer = currentNote;
+				
+			while(searchPointer->next != NULL && searchPointer->next->msg.time < tempMsg.time) 
+				searchPointer = searchPointer->next;
+			
+			tempPointer = searchPointer->next;
+			
+			searchPointer->next = new nodeEvent;
+			searchPointer->next->next = tempPointer;
+			searchPointer->next->msg = tempMsg;
+			
+		} //for numberOfNotes
+	} //for numberOfVoices
+	
+	
+	//With the list complete, let's put the delta times in the structure
+	
+	for(int i = 0; i<numOfVoices; i++){
+		int numberOfNotes = NumberOfNotes(i);
+		searchPointer = root[i];
+		
+		if (numberOfNotes != 0 )
+			while(searchPointer-> next != NULL){
+				float value = searchPointer->next->msg.time - searchPointer->msg.time;
+				//assuming value is the duration between events in seconds,
+				//we need to convert it to ticks
+				value *= ticksPerSecond;
+				
+				unsigned long preDelta = value; //ignore fraction part and reformat data for the algorithm
+				unsigned long buffer; //4-byte "stack"
+				
+				//just for sure
+				preDelta &= 0x0FFFFFFF;
+				
+				buffer = preDelta & 0x7f;
+				while( (preDelta>>=7) ){
+					buffer<<8;
+					buffer |= ((preDelta&0x7f) | 0x80);
+				}
+				
+				searchPointer->next->deltaStacked = buffer;
+				
+				searchPointer = searchPointer->next;
+
+			}//while traverse list
+	} //for numberOfVoices
+					
+	//Ok, let's write the data
+	
+	//writing header ===================================================
+	unsigned char c;
+	midiFile<<"MThd"								  //chunck type
+			<<(c = 0)<<(c = 0)<<(c = 0)<<(c = 6)	  //length
+			<<(c = 0)<<(c = 1)						  //format
+			<<(unsigned char)((numOfVoices>>8)&0xFF)
+			<<(unsigned char)(numOfVoices&0xFF) 		  //number of tracks
+			
+									//format 1 uses first track for informations about time,
+									//so I need numOfVoices + 1 tracks, but...
+									//I will put the metadata for this track later...
+									
+			<<(unsigned char) ((ticksPerSecond>>8)&0xFF) 
+			<<(unsigned char) (ticksPerSecond&0xFF);		//probably set to 96th part of second	
+									
+	//writing each track ===============================================
+	
+	basic_string<unsigned char> trackString; // first I write all the track
+											 // in this string, so later i can
+											 // easily say the length of the track
+											 // in bytes
+	
+	for(int i = 0; i< numOfVoices; i++){
+		for(searchPointer = root[i] ; searchPointer->next != NULL; searchPointer = searchPointer->next){
+			//write DeltaStacked
+			while(true){
+				trackString += (unsigned char) ((searchPointer->next->deltaStacked)&0xFF);
+				if(searchPointer->next->deltaStacked & 0x80)
+					searchPointer->next->deltaStacked >>=8;
+				else
+					break;
+			}
+			//write midi message
+			trackString += searchPointer->next->msg.status;
+			trackString += searchPointer->next->msg.data1;
+			trackString += searchPointer->next->msg.data2;
+		}
+		//write the string to file and...
+		midiFile<<"MTrk"
+				<<(unsigned char)(trackString.length()>>24)
+				<<(unsigned char)(trackString.length()>>16)
+				<<(unsigned char)(trackString.length()>>8)
+				<<(unsigned char)(trackString.length());
+		
+		for(int i = 0; i< trackString.length(); i++)
+			midiFile<<trackString[i];
+		
+		//clear the string for another track, if any
+		trackString.clear();
+	}
+	
+	//close the file
+	
+	midiFile.close();
+	
+	//Delete Alocated Memory ===========================================
+	for(int i = 0; i<numOfVoices; i++){
+		
+		if(root[i]->next != NULL) searchPointer = root[i]->next;
+		else continue;
+		
+		do {
+			tempPointer = searchPointer;
+			searchPointer = searchPointer->next;
+			delete tempPointer;
+		} while(searchPointer->next != NULL);
+	}
+	delete[] root;
+}
 
 // Error managing
 
