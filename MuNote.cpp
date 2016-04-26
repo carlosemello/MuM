@@ -174,9 +174,18 @@ void MuNote::SetParams(MuParamBlock inParams)
 cs_pitch MuNote::CsPitch(void)
 {
 	cs_pitch csp;
+    if(pitch == 0)
+    {
+        csp.octave = 0;
+        csp.pitch = 0;
+    }
+    else
+    {
         csp.octave = ((pitch / 12) + OCTAVE_OFFSET);
         csp.pitch = ((pitch % 12));
-        return csp;
+    }
+    
+    return csp;
 }
 
 string MuNote::PitchString(void)

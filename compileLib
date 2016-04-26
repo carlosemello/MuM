@@ -1,0 +1,19 @@
+# =====================
+# Compilar MuM
+# =====================
+OUTFOLDER=compiledFiles
+mkdir ${OUTFOLDER}
+cd ${OUTFOLDER}
+echo "Compilando MuUtil..."
+g++ -c ../MuUtil.cpp
+echo "Compilando MuError..."
+g++ -c ../MuError.cpp
+echo "Compilando MuParamBlock..."
+g++ -c ../MuParamBlock.cpp
+echo "Compilando MuNote..."
+g++ -c ../MuNote.cpp
+echo "Compilando MuVoice..."
+g++ -c ../MuVoice.cpp
+echo "Compilando MuMaterial..."
+g++ -c ../MuMaterial.cpp
+
