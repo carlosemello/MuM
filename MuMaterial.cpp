@@ -2602,6 +2602,9 @@ void MuMaterial::Csd(string fileName)
     MuError err(MuERROR_NONE);
     fileName.append(".csd");
     
+    if(functionTables == "")
+        SetDefaultFunctionTables();
+    
     cout << endl << "Creating Csound File: "<< fileName << endl << endl;
     
     ofstream csd(fileName.c_str(), ios_base::out | ios_base::trunc);
