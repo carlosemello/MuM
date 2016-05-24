@@ -863,12 +863,14 @@ class MuMaterial
 	
 	/**
 	 * @brief Adds note 'inNote' to voice '0'
-	 *
+    
 	 * @details
 	 * AddNote() adds note 'inNote' to voice '0'. If material is empty, voice '0' is 
-	 * automatically  created. The note is inserted at the correct point in time
-	 * within the voice, according to its start time.
-	 *
+     * automatically  created.Notes are stored in chronological order, so 'inNote' is
+     * inserted at the correct point in time within the voice, according to its
+     * start time. If there are other notes with the exact same starting time, 'inNote'
+     * is always inserted after them.
+ 	 *
 	 * @param
 	 * inNote (MuNote) - note object to be added
 	 *
@@ -879,10 +881,13 @@ class MuMaterial
 	 * @brief Adds note 'inNote' to voice 'voiceNumber'
 	 *
 	 * @details
-	 * AddNote() adds note 'inNote' to voice 'voiceNumber'. The note is inserted at 
-	 * the correct point in time within the voice, according to its start time.
-	 * If material is empty, or voiceNumber  is not a valid voice index number, 
-	 * an error is issued and AddNote() terminates. 
+	 * AddNote() adds note 'inNote' to voice 'voiceNumber'. If material is empty, or 
+     * 'voiceNumber'  is not a valid voice index number, an error is issued and 
+     * AddNote() terminates. Notes are stored in chronological order, so 'inNote' is
+     * inserted at the correct point in time within the voice, according to its
+     * start time. If there are other notes with the exact same starting time, 'inNote'
+     * is always inserted after them.
+
 	 *
 	 * @param
 	 * voiceNumber (int) - voice index
@@ -1008,18 +1013,15 @@ class MuMaterial
 	 * DiatonicTranspose() transposes entire material by degree, that is respecting 
 	 * the intervals found in the key signature. User code provides a key 
 	 * (MIDI note number) and mode (MAJOR_MODE or MINOR_MODE). DiatonicTranspose() 
-	 * translates each note in material to scale degrees. If notes do not belong to 
-	 * the requested key/mode, they are shifted down to the nearest scale degree. 
-	 * Degrees are then transposed based on the "degree distance" between the 
-	 * first note of material and the requested degree. After "degree transposition", 
-	 * altered notes are reshifted in the original direction. This retains the correct 
-	 * accidentals in the same scale degrees as the original. Material is always 
-	 * transposed up from original, moving withing one octave. If user needs to 
-	 * transpose material to the requested degree but in another octave, this can be 
-	 * achieved by providing the key reference in the desired ocatve. 
-	 * For example, 48, 60 and 72 used as key values, all produce a C scale, 
-	 * but each one in a different octave.	 
-	 *
+	 * translates each note in material to scale degrees. Degrees are then transposed 
+     * based on the "degree  distance" between the lowest note of material and the 
+     * requested degree of transposition. Direction of transposition
+     * can be set with the 'direction' argument (possible values bellow).
+     * If any notes within material do not belong to the requested key/mode, 
+     * DiatonicTranspose() issues an error and returns. This may happen at any point
+     * along the transposition process, therefore it is advisable to allways check
+     * the materials last error, before proceding after using DiatonicTranspose().
+     *
 	 * @param
 	 * key (short) - key center (a MIDI pitch number)
 	 * @param
@@ -1027,7 +1029,7 @@ class MuMaterial
 	 * @param
 	 * degree (short) - target scale degree (degree to transpose to)
 	 * @param
-	 * direction (short) - ascending or descending
+	 * direction (short) - ASCENDING or DESCENDING
 	 *
 	 **/	
 	void DiatonicTranspose( short key, short mode, short degree, short direction );
