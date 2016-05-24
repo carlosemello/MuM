@@ -1374,6 +1374,40 @@ class MuMaterial
 	 **/	
 	void MajorTriad(int voiceNumber, float dur);
     
+    /**
+     *
+     * @brief
+     * Fills voice '0' with arpeggiated major triad in time 0
+     *
+     * @details
+     * Builds a major triad from middle C within material. The first note of
+     * the chord starts at time 0 and subsequent notes are placed melodically from
+     * that point on. All notes have a duration of 'dur'.
+     *
+     * @param
+     * dur (float) - duration in seconds
+     *
+     **/
+    void MajorTriadArpeg(float dur);
+    
+    /**
+     *
+     * @brief
+     * Fills requested voice with arpeggiated major triad in time 0 of requested voice
+     *
+     * @details
+     * Builds a major triad from middle C within requested voice. The first note of
+     * the chord starts at time 0 and subsequent notes are placed melodically from
+     * that point on. All notes have a duration of 'dur'.
+     *
+     * @param
+     * voiceNumber (int) - voice index
+     * @param
+     * dur (float) - duration in seconds
+     *
+     **/
+    void MajorTriadArpeg(int voiceNumber, float dur);
+    
 	/**
 	 *
 	 * @brief
@@ -1422,6 +1456,40 @@ class MuMaterial
 	 **/
 	void MinorTriad(int voiceNumber, float dur);
     
+    /**
+     *
+     * @brief
+     * Fills voice '0' with arpeggiated minor triad in time 0
+     *
+     * @details
+     * Builds a minor triad from middle C within material. The first note of
+     * the chord starts at time 0 and subsequent notes are placed melodically from
+     * that point on. All notes have a duration of 'dur'.
+     *
+     * @param
+     * dur (float) - duration in seconds
+     *
+     **/
+    void MinorTriadArpeg(float dur);
+    
+    /**
+     *
+     * @brief
+     * Fills requested voice with arpeggiated minor triad in time 0 of requested voice
+     *
+     * @details
+     * Builds a major minor from middle C within requested voice. The first note of
+     * the chord starts at time 0 and subsequent notes are placed melodically from
+     * that point on. All notes have a duration of 'dur'.
+     *
+     * @param
+     * voiceNumber (int) - voice index
+     * @param
+     * dur (float) - duration in seconds
+     *
+     **/
+    void MinorTriadArpeg(int voiceNumber, float dur);
+
 	/**
 	 *
 	 * @brief
@@ -1470,6 +1538,40 @@ class MuMaterial
 	 **/
 	void AugTriad(int voiceNumber, float dur);
     
+    /**
+     *
+     * @brief
+     * Fills voice '0' with arpeggiated augmented triad in time 0
+     *
+     * @details
+     * Builds a augmented triad from middle C within material. The first note of
+     * the chord starts at time 0 and subsequent notes are placed melodically from
+     * that point on. All notes have a duration of 'dur'.
+     *
+     * @param
+     * dur (float) - duration in seconds
+     *
+     **/
+    void AugTriadArpeg(float dur);
+    
+    /**
+     *
+     * @brief
+     * Fills requested voice with arpeggiated augmented triad in time 0 of requested voice
+     *
+     * @details
+     * Builds a augmented triad from middle C within requested voice. The first note of
+     * the chord starts at time 0 and subsequent notes are placed melodically from
+     * that point on. All notes have a duration of 'dur'.
+     *
+     * @param
+     * voiceNumber (int) - voice index
+     * @param
+     * dur (float) - duration in seconds
+     *
+     **/
+    void AugTriadArpeg(int voiceNumber, float dur);
+    
 	/**
 	 *
 	 * @brief
@@ -1486,6 +1588,7 @@ class MuMaterial
 	 *
 	 **/
 	void AugTriadSplit(float dur);
+    
     
 	/**
 	 *
@@ -1519,6 +1622,40 @@ class MuMaterial
 	 **/
 	void DimTriad(int voiceNumber, float dur);
 	
+    /**
+     *
+     * @brief
+     * Fills voice '0' with arpeggiated diminished triad in time 0
+     *
+     * @details
+     * Builds a diminished triad from middle C within material. The first note of
+     * the chord starts at time 0 and subsequent notes are placed melodically from
+     * that point on. All notes have a duration of 'dur'.
+     *
+     * @param
+     * dur (float) - duration in seconds
+     *
+     **/
+    void DimTriadArpeg(float dur);
+    
+    /**
+     *
+     * @brief
+     * Fills requested voice with arpeggiated diminished triad in time 0 of requested voice
+     *
+     * @details
+     * Builds a diminished triad from middle C within requested voice. The first note of
+     * the chord starts at time 0 and subsequent notes are placed melodically from
+     * that point on. All notes have a duration of 'dur'.
+     *
+     * @param
+     * voiceNumber (int) - voice index
+     * @param
+     * dur (float) - duration in seconds
+     *
+     **/
+    void DimTriadArpeg(int voiceNumber, float dur);
+    
 	/**
 	 *
 	 * @brief
@@ -1550,7 +1687,6 @@ class MuMaterial
 	 * dur (float) - duration in seconds
 	 *
 	 **/
-
     void MajorSeventhChord(int voiceNumber, float dur);	// [PUBLIC]
 	
 	// Scales
@@ -1569,7 +1705,7 @@ class MuMaterial
 	 * dur (float) - duration in seconds
 	 *
 	 **/	
-	void MajorScale(float dur);
+	void MajorScale(float dur, bool addOctave = false);
 	
 	/**
 	 *
@@ -1587,7 +1723,7 @@ class MuMaterial
 	 * dur (float) - duration in seconds
 	 *
 	 **/		
-	void MajorScale(int voiceNumber, float dur);
+	void MajorScale(int voiceNumber, float dur, bool addOctave = false);
     
 	/**
 	 *

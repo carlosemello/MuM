@@ -1223,6 +1223,7 @@ void MuMaterial::DiatonicTranspose( short key, short mode, short targetDegree, s
 	short * modePattern = NULL;
 	long n, j, k;
     int v,i;
+    MuMaterial tempMat;
 	MuNote tempNote;
 	short pitch;
 	short sourceDegree, currDegree, degreeChange;
@@ -1246,7 +1247,9 @@ void MuMaterial::DiatonicTranspose( short key, short mode, short targetDegree, s
 	}
 	
 	targetDegree--;
-	tempNote = GetFirstNote();
+    tempMat = *this;
+    tempMat.Sort(SORT_FIELD_PITCH);
+	tempNote = tempMat.GetFirstNote();
 	pitch = tempNote.Pitch();
 	sourceDegree = Inside( pitch, scale, FULL_SCALE_SIZE );
 	sourceDegree %= NUM_OF_SCALE_DEGREES;
@@ -1873,14 +1876,44 @@ void MuMaterial::MajorTriad(int voiceNumber, float dur)	// [PUBLIC]
 	note.SetDur(dur);
 	note.SetAmp(1.0);
 	
-    note.SetPitch(67);
+    note.SetPitch(60);
 	AddNote(voiceNumber, note);
     note.SetPitch(64);
 	AddNote(voiceNumber, note);
-	note.SetPitch(60);
+	note.SetPitch(67);
 	AddNote(voiceNumber, note);
-	
-	
+}
+
+void MuMaterial::MajorTriadArpeg(float dur)	// [PUBLIC]
+{
+    lastError.Set(MuERROR_NONE);
+    MajorTriadArpeg( 0, dur );
+}
+
+
+void MuMaterial::MajorTriadArpeg(int voiceNumber, float dur)	// [PUBLIC]
+{
+    lastError.Set(MuERROR_NONE);
+    float st = 0.0;
+    
+    MuNote note;
+    note.SetInstr(1);
+    note.SetStart(st);
+    note.SetDur(dur);
+    note.SetAmp(1.0);
+    
+    note.SetPitch(60);
+    AddNote(voiceNumber, note);
+    
+    st += dur;
+    note.SetStart(st);
+    note.SetPitch(64);
+    AddNote(voiceNumber, note);
+    
+    st += dur;
+    note.SetStart(st);
+    note.SetPitch(67);
+    AddNote(voiceNumber, note);
 }
 
 
@@ -1923,6 +1956,37 @@ void MuMaterial::MinorTriad(int voiceNumber, float dur)	// [PUBLIC]
 	AddNote(voiceNumber, note);
 	note.SetPitch(67);
 	AddNote(voiceNumber, note);
+}
+
+void MuMaterial::MinorTriadArpeg(float dur)	// [PUBLIC]
+{
+    lastError.Set(MuERROR_NONE);
+    MinorTriadArpeg( 0, dur );
+}
+
+void MuMaterial::MinorTriadArpeg(int voiceNumber, float dur)	// [PUBLIC]
+{
+    lastError.Set(MuERROR_NONE);
+    float st = 0.0;
+    
+    MuNote note;
+    note.SetInstr(1);
+    note.SetStart(st);
+    note.SetDur(dur);
+    note.SetAmp(1.0);
+    
+    note.SetPitch(60);
+    AddNote(voiceNumber, note);
+    
+    st += dur;
+    note.SetStart(st);
+    note.SetPitch(63);
+    AddNote(voiceNumber, note);
+    
+    st += dur;
+    note.SetStart(st);
+    note.SetPitch(67);
+    AddNote(voiceNumber, note);
 }
 
 void MuMaterial::MinorTriadSplit(float dur)	// [PUBLIC]
@@ -1968,6 +2032,37 @@ void MuMaterial::AugTriad(int voiceNumber, float dur)	// [PUBLIC]
 	AddNote(voiceNumber, note);
 }
 
+void MuMaterial::AugTriadArpeg(float dur)	// [PUBLIC]
+{
+    lastError.Set(MuERROR_NONE);
+    AugTriadArpeg( 0, dur );
+}
+
+void MuMaterial::AugTriadArpeg(int voiceNumber, float dur)	// [PUBLIC]
+{
+    lastError.Set(MuERROR_NONE);
+    float st = 0.0;
+    
+    MuNote note;
+    note.SetInstr(1);
+    note.SetStart(st);
+    note.SetDur(dur);
+    note.SetAmp(1.0);
+    
+    note.SetPitch(60);
+    AddNote(voiceNumber, note);
+    
+    st += dur;
+    note.SetStart(st);
+    note.SetPitch(64);
+    AddNote(voiceNumber, note);
+    
+    st += dur;
+    note.SetStart(st);
+    note.SetPitch(68);
+    AddNote(voiceNumber, note);
+}
+
 void MuMaterial::AugTriadSplit(float dur)	// [PUBLIC]
 {
     lastError.Set(MuERROR_NONE);
@@ -2011,6 +2106,38 @@ void MuMaterial::DimTriad(int voiceNumber, float dur)	// [PUBLIC]
 	AddNote(voiceNumber, note);
 }
 
+void MuMaterial::DimTriadArpeg(float dur)	// [PUBLIC]
+{
+    lastError.Set(MuERROR_NONE);
+    DimTriadArpeg( 0, dur );
+}
+
+void MuMaterial::DimTriadArpeg(int voiceNumber, float dur)	// [PUBLIC]
+{
+    lastError.Set(MuERROR_NONE);
+    float st = 0.0;
+    
+    MuNote note;
+    note.SetInstr(1);
+    note.SetStart(st);
+    note.SetDur(dur);
+    note.SetAmp(1.0);
+    
+    note.SetPitch(60);
+    AddNote(voiceNumber, note);
+    
+    st += dur;
+    note.SetStart(st);
+    note.SetPitch(63);
+    AddNote(voiceNumber, note);
+    
+    st += dur;
+    note.SetStart(st);
+    note.SetPitch(66);
+    AddNote(voiceNumber, note);
+}
+
+
 void MuMaterial::DimTriadSplit(float dur)	// [PUBLIC]
 {
     lastError.Set(MuERROR_NONE);
@@ -2036,36 +2163,29 @@ void MuMaterial::MajorSeventhChord(int voiceNumber, float dur)	// [PUBLIC]
 	note.SetInstr(1);
 	note.SetDur(dur);
 	note.SetAmp(1.0);
-	
     note.SetStart(0.0);
+	
     note.SetPitch(60);
 	AddNote(voiceNumber, note);
-    
-    note.SetStart(1.0);
     note.SetPitch(64);
 	AddNote(voiceNumber, note);
-    
-    note.SetStart(2.0);
     note.SetPitch(67);
 	AddNote(voiceNumber, note);
-
-    note.SetStart(3.0);
     note.SetPitch(71);
 	AddNote(voiceNumber, note);
 }
 
-
-void MuMaterial::MajorScale(float dur)	// [PUBLIC]
+void MuMaterial::MajorScale(float dur, bool addOctave)	// [PUBLIC]
 {
     lastError.Set(MuERROR_NONE);
-	MajorScale( 0, dur );
+	MajorScale( 0, dur, addOctave);
 }
 
-void MuMaterial::MajorScale(int voiceNumber, float dur)	// [PUBLIC]
+void MuMaterial::MajorScale(int voiceNumber, float dur, bool addOctave)	// [PUBLIC]
 {
     lastError.Set(MuERROR_NONE);
-	short scalePattern[7] = {0, 2, 4, 5, 7, 9, 11};
-	int i;
+	short scalePattern[8] = {0, 2, 4, 5, 7, 9, 11, 12};
+	int i,n;
 	float nextStart = 0;
 	
 	MuNote note;
@@ -2074,7 +2194,14 @@ void MuMaterial::MajorScale(int voiceNumber, float dur)	// [PUBLIC]
 	note.SetDur(dur);
 	note.SetAmp(1.0);
 	
-	for(i = 0; i < 7; i++)
+    // if the user wants the first dergree repeated
+    // at the end of the scale...
+    if (addOctave)
+        n = 8;  // we simply let the loop run to the end of the array...
+    else
+        n = 7;  // otherwise we stop one turn short
+    
+	for(i = 0; i < n; i++)
 	{
 		note.SetPitch(60 + scalePattern[i]);
 		AddNote(voiceNumber, note);
@@ -2418,7 +2545,7 @@ string MuMaterial::Orchestra(void)	// [PUBLIC]
     orc << "ifreq = cpspch(p4)" << endl;
     orc << "itable = 1" << endl;
     orc << endl;
-    orc << "kamp linen 1.0, 0.05, p3, (0.8 * p3)" << endl;
+    orc << "kamp linen 1.0, 0.05, p3, (0.9 * p3)" << endl;
     orc << "asig oscil iamp, ifreq, itable" << endl;
     orc << "aout = kamp * asig" << endl;
     orc << "outs aout, aout" << endl;
@@ -2463,7 +2590,7 @@ string MuMaterial::Orchestra(void)	// [PUBLIC]
     orc << "ifreq = cpspch(p4)" << endl;
     orc << "itable = 4" << endl;
     orc << endl;
-    orc << "kamp linen 1.0, 0.06, p3, (0.4 * p3)" << endl;
+    orc << "kamp linen 1.0, 0.03, p3, (0.4 * p3)" << endl;
     orc << "asig oscil iamp, ifreq, itable" << endl;
     orc << "aout = kamp * asig" << endl;
     orc << "outs aout, aout" << endl;

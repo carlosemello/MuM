@@ -225,7 +225,7 @@ MuError MuVoice::AddNote(MuNote inNote)
 			{
 				// check which one comes first...
 				// and place it accordingly.
-				if( newNote->Start() <= curr->Start() )
+				if( newNote->Start() < curr->Start() )
 				{
 					noteList = newNote;
 					newNote->SetNext(curr);
@@ -239,7 +239,7 @@ MuError MuVoice::AddNote(MuNote inNote)
 			else // if there is more than one note on the list, ...
 			{
 				// if the note should go before the first note...
-				if( newNote->Start() <= curr->Start() )
+				if( newNote->Start() < curr->Start() )
 				{
 					// set the list address to the new note and...
 					noteList = newNote;
@@ -255,7 +255,7 @@ MuError MuVoice::AddNote(MuNote inNote)
 					while(curr)
 					{
 						// if this is the place
-						if(newNote->Start() <= curr->Start())
+						if(newNote->Start() < curr->Start())
 						{
 							prev->SetNext(newNote);
 							newNote->SetNext(curr);
