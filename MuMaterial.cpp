@@ -2438,6 +2438,106 @@ void MuMaterial::Decrescendo(int voiceNumber, float max)
     }
 }
 
+void MuMaterial::QuantizeMelodyFor(float tempo)
+{
+    MuNote note;
+    MuParamBlock durations, tempValues;
+    float noteLength, wholePart, currTime;
+    int i,j,k,nVoices,nDurs;
+    long nNotes;
+    float oneBeat = 60.0 / tempo;
+   
+    durations.Init(6);
+    durations[0] = 0.25;
+    durations[1] = 0.33;
+    durations[2] = 0.50;
+    durations[3] = 0.66;
+    durations[4] = 0.75;
+    durations[5] = 1.00;
+    durations.Show();
+    
+    int tam = durations.Num();
+    for(i = 0; i < tam; i++)
+        durations[i] *= oneBeat;
+
+    durations.Show();
+    nDurs = durations.Num();
+    tempValues.Init(nDurs);
+    noteLength = currTime = wholePart = 0;
+    
+    nVoices = NumberOfVoices();
+    
+    for(i = 0; i < nVoices; i++)
+    {
+        // see how many notes there are in this voice...
+        nNotes = NumberOfNotes(i);
+        
+        // remember where the first note starts...
+        note = GetNote(i,0);
+        currTime = note.Start();
+        
+        for(j = 0; j < nNotes; j++)
+        {
+            note = GetNote(i,j);
+            noteLength = note.Dur();
+            
+            // 0) Calculate how many full beats fit inside current duration...
+            int fullBeats = noteLength / oneBeat;
+            
+            // and remove those beats, ...
+            wholePart = (fullBeats * oneBeat);
+            noteLength -= wholePart;
+            
+            // then we try to quantize the remainder...
+            for(k = 0; k < nDurs; k++)
+            {
+                // 1) Get the ratio between noteLength and each reference durations...
+                tempValues[k] = noteLength / durations[k];
+                
+                // 2) The value '1.0' would mean we found a hit. If we can't
+                // find a perfect match, the closest one should be it.
+                // So we subtract each candidate from 1.0 to see how close they
+                // are to the perfect match.
+                tempValues[k] -= 1.0;
+                
+                // 3) We want the smallest value, which is the closest to 1.0;
+                // negative values simply mean they off in the other diretion,
+                // so we get the absolute value (without the negative sign) in
+                // order to compare them all...
+                if(tempValues[k] < 0)
+                    tempValues[k] *= -1;
+            }
+            
+            // now we pick the smallest value...
+            int index = 0;
+            float value = tempValues[index];
+            
+            for(k = 1; k < nDurs; k++)
+            {
+                if(tempValues[k] < value)
+                {
+                    value = tempValues[k];
+                    index = k;
+                }
+            }
+            
+            // 'index' points to the element in the 'durations' array
+            // which has the smallest ratio diference when compared to
+            // the tested note duration, so we use it to access the
+            // correponding quantized duration, to which
+            // we add the whole beats we removed in the beginning...
+            noteLength = durations[index] + wholePart;
+            
+            // Then we fix the note to use the quantized duration and start time...
+            note.SetStart(currTime);
+            note.SetDur(noteLength);
+            // and reinsert it...
+            SetNote(i, j, note);
+            currTime += noteLength;
+        }
+    }
+}
+
 void MuMaterial::RemoveBlankNotes(int voiceNumber)
 {
     lastError.Set(MuERROR_NONE);

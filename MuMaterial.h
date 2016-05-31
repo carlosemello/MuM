@@ -62,8 +62,6 @@ const short FULL_SCALE_SIZE = NUM_OF_SCALE_DEGREES * NUM_OF_OCTAVES;
 const short OCTAVE_IN_DEGREES = 8;
 const short MAJOR_MODE = 0;
 const short MINOR_MODE = 1;
-const short ASCENDING = 1; 
-const short DESCENDING = -1;
 
 // NOTES
 const short C_NAT = 0;
@@ -1987,6 +1985,32 @@ class MuMaterial
 	 *
 	 **/
     void Decrescendo(int voiceNumber, float max);
+    
+    /**
+     *
+     * @brief
+     * Quantizes durations and start times to conform to a  given tempo
+     *
+     * @details
+     * QuantizeMelodyFor() finds the closest duration value in a list of
+     * quantized fractions of a beat for each note in the material, and changes
+     * the note's start time and duration accordingly. 
+     *
+     * IMPORTANT! This algorithm only works with melodic materials.
+     * Also, every rest should be featured within the voices as notes of
+     * invalid (0) pitch and amplitude. If material contains more than
+     * one voice, they should be loaded into separate voices withing the
+     * material. Failure to do so would most likely result in
+     * undesired behaviour.
+     *
+     * @param
+     *
+     * tempo (MuParamBlock &) - the assumed tempo for the melody(ies) contained
+     * in the material. If the wrong tempo is provided, quantization results in
+     * wrong rythms.
+     *
+     **/
+    void QuantizeMelodyFor(float tempo);
     
     /**
 	 *

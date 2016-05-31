@@ -25,7 +25,19 @@
 
 #include "MuError.h"
 
-// DEFS
+// CONSTANTS
+
+//!@brief MIDI pitch value for middle C
+const short MIDDLE_C = 60;
+
+//!@brief One octave defined as 12 half-steps
+const short ONE_OCTAVE = 12;
+
+//!@brief direction for sorting and transposing: ascending order
+const short ASCENDING = 1;
+
+//!@brief direction for sorting and transposing: descending order
+const short DESCENDING = -1;
 
 // PROTOTYPES
 
@@ -112,8 +124,19 @@ extern void MixInts( int * array, int size);
  **/
 extern void SortInts( int * array, int size);
 
+/**
+ * @brief Sorts an array of floats (Bubble Sort)
+ *
+ * @details
+ * This function sorts every element of 'array'
+ * in ascending order
+ * @param array buffer to be sorted
+ * @param size number of elements in array
+ **/
+extern void SortFloats( float * array, int size);
+
 /** 
- * @brief Displays an array of ints
+ * @brief Displays an array of ints (Bubble Sort)
  *
  * @details
  * This function prints the contents of 'array'

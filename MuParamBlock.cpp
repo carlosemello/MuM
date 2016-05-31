@@ -18,6 +18,7 @@
 
 #include "MuParamBlock.h"
 
+
 // constructor
 MuParamBlock::MuParamBlock(void)
 {
@@ -337,4 +338,58 @@ MuError MuParamBlock::Trunc(uShort n)
 	}
 	
 	return err;
+}
+
+
+void MuParamBlock::Show(void)
+{
+    uShort i,n;
+    n = numValues;
+    
+    cout.precision(2);
+    cout << fixed;
+    
+    for(i = 0; i < n; i++)
+    {
+        
+        cout << "[" << values[i] << "] ";
+    }
+    
+    cout << endl;
+}
+
+void MuParamBlock::Sort(short order)
+{
+    int i, j, n;
+    
+    n = numValues;
+    
+    for(i = n; i >= 1; i-- )
+    {
+        for( j = 0; j < i-1; j++ )
+        {
+            if(order == ASCENDING)
+            {
+                if( values[j] > values[j+1] )
+                {
+                    float temp;
+                    temp = values[j];
+                    values[j] = values[j+1];
+                    values[j+1] = temp;
+                }
+            }
+            
+            if(order == DESCENDING)
+            {
+                if( values[j] < values[j+1] )
+                {
+                    float temp;
+                    temp = values[j];
+                    values[j] = values[j+1];
+                    values[j+1] = temp;
+                }
+            }
+        }
+    }
+
 }

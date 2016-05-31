@@ -150,6 +150,27 @@ extern void SortInts( int * array, int n)
 	}
 }
 
+// Sorts (bubble) an array of  floats
+extern void SortFloats( float * array, int n)
+{
+    int i, j;
+    
+    for(i = n; i >= 1; i-- )
+    {
+        for( j = 0; j < i-1; j++ )
+        {
+            if( array[j] > array[j+1] )
+            {
+                int temp;
+                temp = array[j];
+                array[j] = array[j+1]; 
+                array[j+1] = temp;
+            }
+        }
+    }
+}
+
+
 // Shows the contents of an integer array
 extern void ShowInts( int * array, int n )
 {

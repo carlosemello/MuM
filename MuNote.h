@@ -31,10 +31,7 @@
 
 // Constants
 
-//!@brief MIDI pitch value for middle C
-const short MIDDLE_C = 60;
-//!@brief One octave defined as 12 half-steps
-const short ONE_OCTAVE = 12;
+
 //!@brief difference in octaves between MIDI and Csound formats
 /**
 * @details

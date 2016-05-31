@@ -27,6 +27,7 @@
 
 //#include "MuError.h"
 #include "MuUtil.h"
+using namespace std;
 
 //!@brief unsigned byte
 typedef unsigned char uByte;
@@ -299,5 +300,31 @@ class MuParamBlock
 	 * 
 	 **/			
 	MuError Trunc(uShort n);
+    
+    /**
+     * @brief displays data values for debugging
+     *
+     * @details
+     * Show() goes through each parameter contained in the block and
+     * sends its value to standard output. If Block is empty, nothing happens.
+     *
+     **/			
+    void Show(void);
+    
+    /**
+     * @brief Bubble sorts block's data
+     *
+     * @details
+     * Sort() sorts the block's internal data values
+     * in either ascending or descending order. A bubble
+     * algorithm is used.
+     *
+     * @param
+     * order (short) - this argument should contain one of two
+     * constants: ASCENDING (1) or DESCENDING (-1), to inform 
+     * the sorting order to be used.
+     *
+     **/
+    void Sort(short order);
 };
 #endif
