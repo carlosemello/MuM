@@ -346,7 +346,7 @@ void MuParamBlock::Show(void)
     uShort i,n;
     n = numValues;
     
-    cout.precision(2);
+    cout.precision(6);
     cout << fixed;
     
     for(i = 0; i < n; i++)

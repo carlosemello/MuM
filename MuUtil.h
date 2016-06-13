@@ -39,6 +39,21 @@ const short ASCENDING = 1;
 //!@brief direction for sorting and transposing: descending order
 const short DESCENDING = -1;
 
+//!@brief Language Preference: English
+const short ENGLISH = 0;
+
+//!@brief Language Preference: Portuguese
+const short PORTUGUESE = 1;
+
+//!@brief acidentals to use for altered notes: mixed
+const short ACC_USE_BOTH = 0; // currently not supported
+
+//!@brief acidentals to use for altered notes: flats
+const short ACC_FAVOR_FLATS = 1;
+
+//!@brief acidentals to use for altered notes: sharps
+const short ACC_FAVOR_SHARPS = 2;
+
 // PROTOTYPES
 
 

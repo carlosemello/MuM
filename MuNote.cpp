@@ -138,11 +138,15 @@ short MuNote::Pitch(void)
 void MuNote::SetPitch(short newPitch)
 {
 	pitch = newPitch;
+    if (pitch < 0)
+        pitch = 0;
 }
 
 void MuNote::SetPitch(cs_pitch newPitch)
 {
 	pitch = newPitch.pitch + ( ( newPitch.octave - 3 ) * 12 );
+    if(pitch < 0)
+        pitch = 0;
 }
 
 void MuNote::ColapsePitch(void)
@@ -248,6 +252,59 @@ string MuNote::CsString(void)
 	}
 	
 	return cs_string;
+}
+
+string MuNote::PitchName(int languageChoice, int accidentals)
+{
+    string name;
+    string englishSharps[12]    = {"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"};
+    string englishFlats[12]     = {"C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"};
+    string portSharps[12]       = {"DO","DO#","RE","RE#","MI","FA","FA#","SOL","SOL#","LA","LA#","B"};
+    string portFlats[12]        = {"DO","REb","RE","MIb","MI","FA","SOLb","SOL","LAb","LA","SIb","SI"};
+    
+    // zero pitch indicates a rest
+    if(this->Pitch() == 0)
+        name = " -- ";
+    else
+    {
+        int semitone = Pitch()%12;
+        
+        switch (languageChoice)
+        {
+            case ENGLISH:
+            {
+                switch (accidentals)
+                {
+                    case ACC_FAVOR_FLATS:
+                        name = englishFlats[semitone];
+                        break;
+                        
+                    case ACC_FAVOR_SHARPS:
+                        name = englishSharps[semitone];
+                        break;
+                }
+                break;
+            }
+                
+                
+            case PORTUGUESE:
+            {
+                switch (accidentals)
+                {
+                    case ACC_FAVOR_FLATS:
+                        name = portFlats[semitone];
+                        break;
+                        
+                    case ACC_FAVOR_SHARPS:
+                        name = portSharps[semitone];
+                        break;
+                }
+                break;
+            }
+        }
+    }
+    
+    return name;
 }
 
 MuMIDIMessage MuNote::MIDIOn(void)

@@ -515,6 +515,29 @@ class MuNote
 	 *
 	 **/	
 	string		PitchString(void);
+    
+    /**
+     * @brief Returns the note's pitch name
+     *
+     * @details
+     *
+     * PitchName() returns the note's pitch name for the requested language.
+     * Currently supported languages are English (e.g.: A, B, C, D, ...) and
+     * Portuguese (e.g.: La, Si, Do, Re, ...). Accidentals are represented by
+     * characters '#' (sharp) and 'b' (flat) in both languages
+     * (e.g.: F#, Sib, ...)
+     *
+     * @param  
+     * languageChoice (int) - a constant indicating the choice of language to be used;
+     * current values are: ENGLISH or PORTUGUESE.
+     * @param
+     * accidentals (int) - enharmonic choice for altered notes; current values are:
+     * ACC_FAVOR_FLATS (1) and ACC_FAVOR_SHARPS (2)
+     *
+     * @return  string object containing the name of the note
+     *
+     **/	
+    string		PitchName(int languageChoice, int accidentals);
 	
 	/**
 	 * @brief Returns the note's Csound score representation (i-line)  
