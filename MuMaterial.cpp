@@ -232,7 +232,7 @@ MuMaterial  MuMaterial::operator+(const MuMaterial & inMaterial)		// [PUBLIC]
 {
     MuNote temp = inNote;
     
-    temp.SetStart(Dur());
+    temp.SetStart(this->Dur());
     AddNote(temp);
     
     return *this;
@@ -741,6 +741,55 @@ void MuMaterial::Append(int voiceNumber, const MuMaterial & inMaterial, int inVo
 			return;
 		}
 	}
+}
+
+void MuMaterial::Append(int voiceNumber, MuNote inNote)
+{
+    lastError.Set(MuERROR_NONE);
+    float end;
+    
+    // If target voice number is invalid (negative) we bail out
+    if(voiceNumber < 0)
+    {
+        lastError.Set(MuERROR_INVALID_VOICE_NUMBER);
+        return;
+    }
+
+    // if the requested voice position in this material does not exist...
+    // we add new voices up to the desired voice number...
+    if( ( voiceNumber >= numOfVoices ) )
+        AddVoices(voiceNumber - numOfVoices + 1);
+    
+    // then, find out where the voice ends,...
+    end = voices[voiceNumber].End();
+    
+    // and make the new note start at that point...
+    inNote.SetStart(end);
+    
+    // after that we just append the note to the requested voice...
+    // and acknowledge possible errors...
+    lastError.Set(voices[voiceNumber].AddNote(inNote));
+}
+
+void MuMaterial::IncludeNote(int voiceNumber, MuNote inNote)
+{
+    lastError.Set(MuERROR_NONE);
+    
+    // If target voice number is invalid (negative) we bail out
+    if(voiceNumber < 0)
+    {
+        lastError.Set(MuERROR_INVALID_VOICE_NUMBER);
+        return;
+    }
+    
+    // if the requested voice position in this material does not exist...
+    // we add new voices up to the desired voice number...
+    if( ( voiceNumber >= numOfVoices ) )
+        AddVoices(voiceNumber - numOfVoices + 1);
+    
+    // after that we just include the note to the requested voice...
+    // and acknowledge possible errors...
+    lastError.Set(voices[voiceNumber].IncludeNote(inNote));
 }
 
 // NOTES
@@ -2606,7 +2655,7 @@ void MuMaterial::RemoveBlankNotes(int voiceNumber)
 
 // File IO
 // reads a Csound score (.sco) into material object
-void MuMaterial::LoadScore(string fileName)	// [PUBLIC]
+void MuMaterial::LoadScore(string fileName, short mode)	// [PUBLIC]
 {
 	lastError.Set(MuERROR_NONE);
 	int instrNumber = 0;
@@ -2658,14 +2707,22 @@ void MuMaterial::LoadScore(string fileName)	// [PUBLIC]
 						SetInstrument( voiceNumber, instrNumber);
 						// Then we insert current note into the newly created voice...
 						theNote = CreateNoteFromCsoundLine(inputLine);
-						AddNote(voiceNumber, theNote );
+                        
+                        if(mode == LOAD_MODE_TIME)
+                            AddNote(voiceNumber, theNote );
+                        if(mode == LOAD_MODE_DIRECT)
+                            IncludeNote(voiceNumber, theNote);
+                        
 						if(lastError.Get() != MuERROR_NONE)
 							return;
 					}
 					else
 					{
 						theNote = CreateNoteFromCsoundLine(inputLine);
-						AddNote( voiceNumber, theNote );
+                        if(mode == LOAD_MODE_TIME)
+                            AddNote(voiceNumber, theNote );
+                        if(mode == LOAD_MODE_DIRECT)
+                            IncludeNote(voiceNumber, theNote);
 					}
 					break;
 			}
@@ -2888,7 +2945,7 @@ void MuMaterial::Csd(string fileName)
     if(functionTables == "")
         SetDefaultFunctionTables();
     
-    cout << endl << "Creating Csound File: "<< fileName << endl << endl;
+    // cout << endl << "Creating Csound File: "<< fileName << endl << endl;
     
     ofstream csd(fileName.c_str(), ios_base::out | ios_base::trunc);
     if(csd)
@@ -3129,10 +3186,10 @@ MuNote MuMaterial::CreateNoteFromCsoundLine(char * inLine)	// [PUBLIC]
 
 // Error managing
 
-// In order to make writing with MatMus simpler and easier, none of the
+// In order to make writing with MuM simpler and easier, none of the
 // APIs in this library return errors directly. They either
-// return requested objects/Data or void. However, when implementing
-// code which uses MataMus, one may check, at any time, the error
+// return requested objects/data or void. However, when implementing
+// code which uses MuM, one may check, at any time, the error
 // value of the last operation performed by an object of the
 // MuMaterial class. It is also possible (though not common)
 // to reset the error status to 0 or any other error code if so desired.

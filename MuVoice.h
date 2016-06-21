@@ -257,6 +257,28 @@ class MuVoice
 	 **/	
     MuError	AddNote(MuNote inNote);
 	
+    /**
+     *
+     * @brief places the new note at the end of voice's note list
+     *
+     * @details
+     * This method places a copy of 'inNote' at the end of the
+     * voice's note list, regardless of the note's start time
+     *
+     * @param
+     * inNote (MuNote) - note to be included in voice
+     *
+     * @return
+     * MuError
+     * <ul>
+     * <li> MuERROR_NONE upon success
+     * <li> MuERROR_INSUF_MEM if memoery allocation fails
+     * </ul>
+     *
+     **/	
+
+    MuError IncludeNote(MuNote inNote);
+    
 	/**
 	 *
 	 * @brief Removes note from voice's note list

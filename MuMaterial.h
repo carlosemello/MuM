@@ -96,6 +96,10 @@ const short EIGHTH_DEGREE = 7;
 
 #define CSOUND_PATH "/usr/local/bin/csound "
 
+// SCORE LOADING MODES:
+const short LOAD_MODE_TIME = 0;
+const short LOAD_MODE_DIRECT = 1;
+
 /**
  * @class MuMaterial
  *
@@ -662,6 +666,39 @@ class MuMaterial
 	 **/			
 	void Append(int voiceNumber, const MuMaterial & inMaterial, int inVoice);
 	
+    /**
+     * @brief Appends input note to the requested voice in material
+     *
+     * @details
+     * Append() takes note 'inNote' and appends it to voice 'voiceNumber' 
+     * of this material. If 'voiceNumber' does not exist it is created. 
+     * If 'voiceNumber' is negative, an error is issued (see lastError)
+     *
+     * @param
+     * voiceNumber (int) - voice index
+     * @param
+     * inNote (MuNote) - note to be appended
+     *
+     **/
+    void Append(int voiceNumber, MuNote inNote);
+    
+    /**
+     * @brief adds input note to the end of requested voice
+     *
+     * @details
+     * Include() takes note 'inNote' and adds it to the end of 'voiceNumber'
+     * regardless of the note's start time. If the requested voice does not 
+     * exist it is created. If 'voiceNumber' is negative, an error is issued 
+     * (see lastError)
+     *
+     * @param
+     * voiceNumber (int) - voice index
+     * @param
+     * inNote (MuNote) - note to be included
+     *
+     **/
+    void IncludeNote(int voiceNumber, MuNote inNote);
+
     // NOTES
 	
 	/**
@@ -2052,12 +2089,20 @@ class MuMaterial
 	* which case the file may be placed in a suitable location. If the score file cannot be found in 
 	* the place referenced by fileName, or if by any other reason it fails to open (permissions?), 
 	* LoadScore() issues an error and terminates silently.
+    *
+    * LoadScore() can operate in one of two modes, as requested by its second argument. If mode ==
+    * LOAD_MODE_TIME (the default mode) notes are added according to their start time, so they will
+    * be in crhonological order even if the score is not. If mode == LOAD_MODE_DIRECT notes are
+    * loaded in the order they appear in the score, thus they may not be necessarily in order.
 	*
 	* @param
 	* fileName (string) - path to file inside string object
+    * @param
+    * mode (short) - mode of operation. allowed values are LOAD_MODE_TIME (0)
+    * and LOAD_MODE_DIRECT (1)
 	*
 	**/
-    void LoadScore(string fileName);
+    void LoadScore(string fileName, short mode = LOAD_MODE_TIME);
 	
     /**
      * @brief
@@ -2386,7 +2431,7 @@ class MuMaterial
 	 * Returns an MuError object containing error information for the last action 
 	 * performed by material. Since every method of the MuMaterial class clears 
 	 * the internal error flag before executing, the error condition should be
-	 * chekd right after a given method call. This error may then be viewed with 
+	 * cheked right after a given method call. This error may then be viewed with
 	 * the Message() method (see MuError, earlier in this reference manual).  
 	 *
 	 * Example: 

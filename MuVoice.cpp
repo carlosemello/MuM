@@ -201,7 +201,6 @@ MuError MuVoice::AddNote(MuNote inNote)
     MuNote * newNote = new MuNote;
 	bool slotFound = false;
 	
-	
     if(!newNote)
     {
 		err.Set(MuERROR_INSUF_MEM);
@@ -292,6 +291,60 @@ MuError MuVoice::AddNote(MuNote inNote)
 	
 	return err;
 }
+
+MuError MuVoice::IncludeNote(MuNote inNote)
+{
+    MuError err;
+    MuNote * prev, * curr;
+    
+    MuNote * newNote = new MuNote;
+    
+    if(!newNote)
+    {
+        err.Set(MuERROR_INSUF_MEM);
+    }
+    else
+    {
+        // copy note data to new link
+        *newNote = inNote;
+        
+        // if list is empty...
+        if(!noteList)
+        {
+            noteList = newNote; // ... add first note
+            newNote->SetNext(NULL);	// and terminate list
+        }
+        else
+        {
+            curr = noteList;
+            prev = curr;
+            
+            while (curr)
+            {
+                prev = curr;
+                curr = curr->Next();
+            }
+            
+            // at this point prev points to the last valid link...
+            prev->SetNext(newNote);
+        }
+        
+        // set the note's instrument choice according to
+        // the voice's instrument number, if instrument number is set,
+        // and the note has no instrument definition yet.
+        // otherwise, leave the note's instrument choice untouched...
+        if(( InstrumentNumber() > 0) && (newNote->Instr() == 0))
+            newNote->SetInstr(InstrumentNumber());
+        
+        // increment note count
+        // OBS.: (IMPORTANT) this member variable must not be modified
+        // anywhere else, except for when removing notes!
+        numOfNotes++;
+    }
+    
+    return err;
+}
+
 
 MuError MuVoice::RemoveNote(long num)
 {
