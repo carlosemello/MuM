@@ -185,7 +185,8 @@ class MuMaterial
     MuVoice * voices;	
     int numOfVoices;
 	
-    string functionTables;
+    static string orchestra;
+    static string functionTables;
     string csOptions;
 	
 	public:
@@ -2096,7 +2097,7 @@ class MuMaterial
     * loaded in the order they appear in the score, thus they may not be necessarily in order.
 	*
 	* @param
-	* fileName (string) - path to file inside string object
+	* fileName (string) - path to file as a string object
     * @param
     * mode (short) - mode of operation. allowed values are LOAD_MODE_TIME (0)
     * and LOAD_MODE_DIRECT (1)
@@ -2122,6 +2123,30 @@ class MuMaterial
      **/
      string Orchestra(void);
     
+    /**
+     * @brief
+     * Loads an orchestra definition from a Csound Orchestra file (.orc)
+     *
+     * @details
+     * LoadOrchestra() opens the provided Csound orquestra file and copies
+     * it's data as text to the material's internal string object, so that 
+     * it can be used by the material for playback purposes. This will 
+     * completely replace the material's internal orchestra definition for
+     * the remaining of the object's existence.
+     *
+     * Normally fileName needs to reference a file which is contained in the same folder as the
+     * running program. Optionally, the string may contain the complete path to the file, in
+     * which case the file may be placed in a suitable location. If the orchestra file cannot
+     * be found in the place referenced by fileName, or if by any other reason it fails to open
+     * (permissions?), LoadOrchestra() issues an error and terminates silently.
+     *
+     * @param
+     * fileName (string) - pathname for the orchestra file to be loaded. File maust be a
+     *  a valid Csound orchestra file (.orc)
+     *
+     **/
+    void LoadOrchestra(string fileName);
+
 	/**
 	 * @brief
 	 * Writes Csound orchestra to file
@@ -2401,6 +2426,32 @@ class MuMaterial
 	 *
 	 **/
 	void AddFunctionTables(string inTables);
+    
+    /**
+     * @brief
+     * Loads function tables from file
+     *
+     * @details
+     * LoadFunctionTables() opens the provided file and copies
+     * it's data as text to the material's internal string object, so that
+     * it can be used by the material for playback with Csound. This will
+     * completely replace the material's internal function table definitions for
+     * the  object.
+     *
+     * Normally fileName needs to reference a file which is contained in the same folder as the
+     * running program. Optionally, the string may contain the complete path to the file, in
+     * which case the file may be placed in a suitable location. If the function table file cannot
+     * be found in the place referenced by fileName, or if by any other reason it fails to open
+     * (permissions?), LoadFunctionTables() issues an error and terminates silently, leaving
+     * the internal table definitions untouched.
+     *
+     * @param
+     * fileName (string) - pathname for the orchestra file to be loaded. File maust be a
+     *  a valid Csound orchestra file (.orc)
+     *
+     **/
+
+    void LoadFunctionTables(string fileName);
 	
 	/**
 	 * @brief

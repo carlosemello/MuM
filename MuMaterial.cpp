@@ -21,6 +21,8 @@
 #include "MuMaterial.h"
 
 // Constructors
+string MuMaterial::orchestra = "";
+string MuMaterial::functionTables = "";
 
 // Default
 MuMaterial::MuMaterial(void)
@@ -2742,76 +2744,109 @@ string MuMaterial::Orchestra(void)	// [PUBLIC]
     MuError err(MuERROR_NONE);
     stringstream orc;
 
-    orc << "; ====================" << endl;
-    orc << "sr = 44100" << endl;
-    orc << "kr = 441" << endl;
-    orc << "ksmps = 100" << endl;
-    orc << "nchnls = 2" << endl;
-    orc << "; ====================" << endl;
+    if(orchestra == "")
+    {
+        orc << "; ====================" << endl;
+        orc << "sr = 44100" << endl;
+        orc << "kr = 441" << endl;
+        orc << "ksmps = 100" << endl;
+        orc << "nchnls = 2" << endl;
+        orc << "; ====================" << endl;
+        
+        orc << endl;
+        
+        orc << "; =======================================" << endl;
+        orc << "instr 1 ; (short atack, long release)" << endl;
+        orc << "; =======================================" << endl;
+        orc << "iamp = p5 * 25000" << endl;
+        orc << "ifreq = cpspch(p4)" << endl;
+        orc << "itable = 1" << endl;
+        orc << endl;
+        orc << "kamp linen 1.0, 0.05, p3, (0.9 * p3)" << endl;
+        orc << "asig oscil iamp, ifreq, itable" << endl;
+        orc << "aout = kamp * asig" << endl;
+        orc << "outs aout, aout" << endl;
+        orc << "; =======================================" << endl;
+        orc << "endin" << endl;
+        orc << "; =======================================" << endl;
+        
+        orc << "; =======================================" << endl;
+        orc << "instr 2 ; (medium atack, short release)" << endl;
+        orc << "; =======================================" << endl;
+        orc << "iamp = p5 * 25000" << endl;
+        orc << "ifreq = cpspch(p4)" << endl;
+        orc << "itable = 2" << endl;
+        orc << endl;
+        orc << "kamp linen 1.0, 0.1, p3, (0.1 * p3)" << endl;
+        orc << "asig oscil iamp, ifreq, itable" << endl;
+        orc << "aout = kamp * asig" << endl;
+        orc << "outs aout, aout" << endl;
+        orc << "; =======================================" << endl;
+        orc << "endin" << endl;
+        orc << "; =======================================" << endl;
+        
+        orc << "; =======================================" << endl;
+        orc << "instr 3 ; (long atack, long release)" << endl;
+        orc << "; =======================================" << endl;
+        orc << "iamp = p5 * 25000" << endl;
+        orc << "ifreq = cpspch(p4)" << endl;
+        orc << "itable = 3" << endl;
+        orc << endl;
+        orc << "kamp linen 1.0, (0.4 * p3), p3, (0.3 * p3)" << endl;
+        orc << "asig oscil iamp, ifreq, itable" << endl;
+        orc << "aout = kamp * asig" << endl;
+        orc << "outs aout, aout" << endl;
+        orc << "; =======================================" << endl;
+        orc << "endin" << endl;
+        orc << "; =======================================" << endl;
+        
+        orc << "; =======================================" << endl;
+        orc << "instr 4 ; (short atack, medium release)" << endl;
+        orc << "; =======================================" << endl;
+        orc << "iamp = p5 * 25000" << endl;
+        orc << "ifreq = cpspch(p4)" << endl;
+        orc << "itable = 4" << endl;
+        orc << endl;
+        orc << "kamp linen 1.0, 0.03, p3, (0.4 * p3)" << endl;
+        orc << "asig oscil iamp, ifreq, itable" << endl;
+        orc << "aout = kamp * asig" << endl;
+        orc << "outs aout, aout" << endl;
+        orc << "; =======================================" << endl;
+        orc << "endin" << endl;
+        orc << "; =======================================" << endl;
+        
+        orchestra = orc.str();
+    }
     
-    orc << endl;
+    return orchestra;
+}
+
+// Loads an orchestra from orchestra file (.orc)
+void MuMaterial::LoadOrchestra(string fileName)
+{
+    char inputLine[256];
+     stringstream orc;
+    lastError.Set(MuERROR_NONE);
     
-    orc << "; =======================================" << endl;
-    orc << "instr 1 ; (short atack, long release)" << endl;
-    orc << "; =======================================" << endl;
-    orc << "iamp = p5 * 25000" << endl;
-    orc << "ifreq = cpspch(p4)" << endl;
-    orc << "itable = 1" << endl;
-    orc << endl;
-    orc << "kamp linen 1.0, 0.05, p3, (0.9 * p3)" << endl;
-    orc << "asig oscil iamp, ifreq, itable" << endl;
-    orc << "aout = kamp * asig" << endl;
-    orc << "outs aout, aout" << endl;
-    orc << "; =======================================" << endl;
-    orc << "endin" << endl;
-    orc << "; =======================================" << endl;
-    
-    orc << "; =======================================" << endl;
-    orc << "instr 2 ; (medium atack, short release)" << endl;
-    orc << "; =======================================" << endl;
-    orc << "iamp = p5 * 25000" << endl;
-    orc << "ifreq = cpspch(p4)" << endl;
-    orc << "itable = 2" << endl;
-    orc << endl;
-    orc << "kamp linen 1.0, 0.1, p3, (0.1 * p3)" << endl;
-    orc << "asig oscil iamp, ifreq, itable" << endl;
-    orc << "aout = kamp * asig" << endl;
-    orc << "outs aout, aout" << endl;
-    orc << "; =======================================" << endl;
-    orc << "endin" << endl;
-    orc << "; =======================================" << endl;
-    
-    orc << "; =======================================" << endl;
-    orc << "instr 3 ; (long atack, long release)" << endl;
-    orc << "; =======================================" << endl;
-    orc << "iamp = p5 * 25000" << endl;
-    orc << "ifreq = cpspch(p4)" << endl;
-    orc << "itable = 3" << endl;
-    orc << endl;
-    orc << "kamp linen 1.0, (0.4 * p3), p3, (0.3 * p3)" << endl;
-    orc << "asig oscil iamp, ifreq, itable" << endl;
-    orc << "aout = kamp * asig" << endl;
-    orc << "outs aout, aout" << endl;
-    orc << "; =======================================" << endl;
-    orc << "endin" << endl;
-    orc << "; =======================================" << endl;
-    
-    orc << "; =======================================" << endl;
-    orc << "instr 4 ; (short atack, medium release)" << endl;
-    orc << "; =======================================" << endl;
-    orc << "iamp = p5 * 25000" << endl;
-    orc << "ifreq = cpspch(p4)" << endl;
-    orc << "itable = 4" << endl;
-    orc << endl;
-    orc << "kamp linen 1.0, 0.03, p3, (0.4 * p3)" << endl;
-    orc << "asig oscil iamp, ifreq, itable" << endl;
-    orc << "aout = kamp * asig" << endl;
-    orc << "outs aout, aout" << endl;
-    orc << "; =======================================" << endl;
-    orc << "endin" << endl;
-    orc << "; =======================================" << endl;
-    
-    return orc.str();
+    ifstream orchestra_in(fileName.c_str());
+    if(orchestra_in)
+    {
+        while(!orchestra_in.eof())
+        {
+            // retrieve each line from input file
+            orchestra_in.getline(inputLine, 256);
+            orc << inputLine << endl;
+        }
+        orchestra = orc.str();
+        
+        // DEBUG:
+        //cout << "[ORCHESTRA FILE LOADED]:" << endl << endl;
+        //cout << orchestra << endl << endl;
+    }
+    else
+    {
+        lastError.Set(MuERROR_COULDNT_OPEN_INPUT_FILE);
+    }
 }
 
 // Writes orchestra file
@@ -2839,14 +2874,19 @@ string MuMaterial::Score(void)
     stringstream score;
     string ftables = FunctionTables();
     
-    if(ftables != "")
+    if(ftables == "")
     {
-        score << "; ========================================" << endl;
-        score << "; Function Tables:" << endl;
-        score << "; ========================================" << endl;
-        score <<  ftables << endl;
-        score << "; ========================================" << endl << endl;
+        SetDefaultFunctionTables();
+        ftables = FunctionTables();
     }
+    
+    // Write Function Tables...
+    score << "; ========================================" << endl;
+    score << "; Function Tables:" << endl;
+    score << "; ========================================" << endl;
+    score <<  ftables << endl;
+    score << "; ========================================" << endl << endl;
+    
     
     if( (voices != NULL) && (numOfVoices > 0) )
     {
@@ -2942,8 +2982,7 @@ void MuMaterial::Csd(string fileName)
     MuError err(MuERROR_NONE);
     fileName.append(".csd");
     
-    if(functionTables == "")
-        SetDefaultFunctionTables();
+    string tbls = FunctionTables();
     
     // cout << endl << "Creating Csound File: "<< fileName << endl << endl;
     
@@ -2960,15 +2999,13 @@ void MuMaterial::Csd(string fileName)
 
 void MuMaterial::PlaybackWithCsound(string fileName)
 {
-    SetDefaultFunctionTables();
-    
     // Start by creating the csd file...
     Csd(fileName);
     
     // If file creation succeeds, proceed to call Csound...
     if(lastError.Get() == MuERROR_NONE)
     {
-        cout << endl << "Playing with Csound..." << endl << endl;;
+        cout << endl << "Playing with Csound..." << endl << endl;
         string command;
         command = CSOUND_PATH;
         command += " ";
@@ -3070,6 +3107,32 @@ void MuMaterial::AddFunctionTables(string inTables)
 	MuError err(MuERROR_NONE);
 	functionTables += "\n";
 	functionTables += inTables;
+}
+
+void MuMaterial::LoadFunctionTables(string fileName)	// [PUBLIC]
+{
+    char inputLine[256];
+    stringstream tables;
+    lastError.Set(MuERROR_NONE);
+    
+    ifstream tables_in(fileName.c_str());
+    if(tables_in)
+    {
+        while(!tables_in.eof())
+        {
+            // retrieve each line from input file
+            tables_in.getline(inputLine, 256);
+            tables << inputLine << endl;
+        }
+        SetFunctionTables(tables.str());
+        // DEBUG:
+        //cout << "[FUNCTION TABLES LOADED]:" << endl << endl;
+        //cout << FunctionTables() << endl << endl;
+    }
+    else
+    {
+        lastError.Set(MuERROR_COULDNT_OPEN_INPUT_FILE);
+    }
 }
 
 MuNote MuMaterial::CreateNoteFromCsoundLine(char * inLine)	// [PUBLIC]
