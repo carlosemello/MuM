@@ -8,6 +8,7 @@
 //*********************************************
 
 
+
 /** @file MuMaterial.cpp
  *
  * @brief Material Class Implementation
@@ -21,8 +22,8 @@
 #include "MuMaterial.h"
 
 // Constructors
-string MuMaterial::orchestra = "";
-string MuMaterial::functionTables = "";
+string MuMaterial::orchestra;
+string MuMaterial::functionTables;
 
 // Default
 MuMaterial::MuMaterial(void)
@@ -50,7 +51,6 @@ MuMaterial::MuMaterial(const MuMaterial & inMaterial)
             for(int i = 0; i < n; i++)
 				voices[i] = inMaterial.voices[i];
 			numOfVoices = n;
-			functionTables = inMaterial.functionTables;
             csOptions = inMaterial.csOptions;
         }
         else
@@ -72,9 +72,6 @@ MuMaterial::MuMaterial( const MuMaterial & inMaterial, int fromVoice )
     numOfVoices = 0;
     lastError.Set(MuERROR_NONE);
 	
-	// obs.: since we are only interested in a specific voice,...
-	// functionTables remain uninitialized
-    
     if(inMaterial.voices != NULL)
     {
         if( ( fromVoice > 0 ) && ( fromVoice < inMaterial.numOfVoices) )
@@ -84,7 +81,6 @@ MuMaterial::MuMaterial( const MuMaterial & inMaterial, int fromVoice )
             {
                 voices[0] = inMaterial.voices[fromVoice];
                 numOfVoices = 1;
-                functionTables = inMaterial.functionTables;
                 csOptions = inMaterial.csOptions;
             }
             else
@@ -130,7 +126,6 @@ MuMaterial & MuMaterial::operator=(const MuMaterial & inMaterial)		// [PUBLIC]
 				voices[i] = inMaterial.voices[i];
 			}
             numOfVoices = n;
-			functionTables = inMaterial.functionTables;
             csOptions = inMaterial.csOptions;
         }
 		else
@@ -1843,8 +1838,6 @@ MuMaterial MuMaterial::Segments(int n)	// [PUBLIC]
 					m.AddNote( i, note );
 			}
 		}
-        // don't forget to copy the tables...
-        m.functionTables = functionTables;
     }
     return m;
 }
@@ -1901,8 +1894,6 @@ MuMaterial MuMaterial::Segments(int n, float * ratios)	// [PUBLIC]
 						m.AddNote( i, note );
 				}
             }
-            // don't forget to copy the tables...
-            m.functionTables = functionTables;
         }
     }
     
@@ -2684,9 +2675,8 @@ void MuMaterial::LoadScore(string fileName, short mode)	// [PUBLIC]
 			{
 				// if function table found, store it..
 				case 'f':
-					functionTables.append(inputLine);
-					functionTables.append("\n");
-					break;
+                    AddFunctionTables(inputLine);
+                    break;
 				
 				// if note line found, ...
 				case 'i':
@@ -2982,8 +2972,6 @@ void MuMaterial::Csd(string fileName)
     MuError err(MuERROR_NONE);
     fileName.append(".csd");
     
-    string tbls = FunctionTables();
-    
     // cout << endl << "Creating Csound File: "<< fileName << endl << endl;
     
     ofstream csd(fileName.c_str(), ios_base::out | ios_base::trunc);
@@ -3058,7 +3046,6 @@ void MuMaterial::Clear(void)
 		voices = NULL;
 		numOfVoices = 0;
 	}
-	functionTables = "";
 }
 
 void MuMaterial::Show( void )
@@ -3090,10 +3077,10 @@ string MuMaterial::FunctionTables(void)	// [PUBLIC]
 void MuMaterial::SetDefaultFunctionTables(void)	// [PUBLIC]
 {
     MuError err(MuERROR_NONE);
-	functionTables  = "f1 0 4096 10 1 .9 .1 .8 .2 .7 .3 .6 .4 .5\n";
-	functionTables += "f2 0 4096 10 1 0 1 0 1 0 1 0 1\n";
-	functionTables += "f3 0 4096 10 .1 .3 .5 .7 .5 .3 .1\n";
-	functionTables += "f4 0 4096 10 .8 .6 .4 .2 .4 .6 .8\n";
+	AddFunctionTables("f1 0 4096 10 1 .9 .1 .8 .2 .7 .3 .6 .4 .5");
+    AddFunctionTables("f2 0 4096 10 1 0 1 0 1 0 1 0 1");
+    AddFunctionTables("f3 0 4096 10 .1 .3 .5 .7 .5 .3 .1");
+    AddFunctionTables("f4 0 4096 10 .8 .6 .4 .2 .4 .6 .8");
 }
 
 void MuMaterial::SetFunctionTables(string inTables)	// [PUBLIC]
@@ -3105,8 +3092,8 @@ void MuMaterial::SetFunctionTables(string inTables)	// [PUBLIC]
 void MuMaterial::AddFunctionTables(string inTables)
 {
 	MuError err(MuERROR_NONE);
-	functionTables += "\n";
 	functionTables += inTables;
+    functionTables += "\n";
 }
 
 void MuMaterial::LoadFunctionTables(string fileName)	// [PUBLIC]
@@ -3124,7 +3111,8 @@ void MuMaterial::LoadFunctionTables(string fileName)	// [PUBLIC]
             tables_in.getline(inputLine, 256);
             tables << inputLine << endl;
         }
-        SetFunctionTables(tables.str());
+        string temp = tables.str();
+        SetFunctionTables(temp);
         // DEBUG:
         //cout << "[FUNCTION TABLES LOADED]:" << endl << endl;
         //cout << FunctionTables() << endl << endl;
