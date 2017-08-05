@@ -111,8 +111,11 @@ MuMaterial & MuMaterial::operator=(const MuMaterial & inMaterial)		// [PUBLIC]
 	if(this == &inMaterial)
 		return *this;
 	// delete old storage...
-	delete [] voices;
-	voices = NULL;
+    if(voices)
+    {
+        delete [] voices;
+        voices = NULL;
+    }
 	int n = 0;
 	// check for input content...
 	if(inMaterial.voices != NULL)
@@ -255,8 +258,20 @@ MuMaterial & MuMaterial::operator*(short interval)		// [PUBLIC]
 MuMaterial::~MuMaterial(void)
 {
     lastError.Set(MuERROR_NONE);
+    int i;
+    
+    // Leak Fix:
+    // in order to avoid memory leaks,
+    // before releasing the voice array, we need to go
+    // through each voice and release all the notes...
 	if(voices)
+    {
+        for(i = 0; i < numOfVoices; i++)
+            voices[i].Clear();
         delete [] voices;
+        voices = NULL;
+        numOfVoices = 0;
+    }
 }
 
 // ======================================================================
@@ -296,6 +311,25 @@ float MuMaterial::Dur(void) // [PUBLIC]
 	}
 	
 	return dur;
+}
+
+float MuMaterial::Dur(int voiceNumber)
+{
+    float dur = 0;
+    lastError.Set(MuERROR_NONE);
+    if(voices != NULL)
+    {
+        if( ( voiceNumber >= 0 ) && ( voiceNumber < numOfVoices ) )
+        {
+            dur = voices[voiceNumber].Dur();
+        }
+        else
+            lastError.Set(MuERROR_INVALID_VOICE_NUMBER);
+    }
+    else
+        lastError.Set(MuERROR_MATERIAL_IS_EMPTY);
+
+    return dur;
 }
 
 // Voices
@@ -430,6 +464,7 @@ void MuMaterial::SetVoice(int voiceNum, const MuMaterial & inMaterial, int inVoi
 				lastError.Set( err );
 				return;
 			}
+            voices[voiceNum].SetInstrumentNumber(tempVoice.InstrumentNumber());
 		}
 		else
 		{	
@@ -835,6 +870,47 @@ long MuMaterial::NumberOfNotes(int voiceNumber)
 		lastError.Set(MuERROR_MATERIAL_IS_EMPTY);
 	
 	return num;
+}
+
+float MuMaterial::MelodicDensity( int voiceNumber )
+{
+    MuNote note;
+    MuError error;
+    long n,i;
+    float lastStart = -1;
+    float density = 0;
+    float dur = 0;
+    if(voices != NULL)
+    {
+        // if requested voice is valid...
+        if((voiceNumber < numOfVoices) && (voiceNumber >= 0))
+        {
+            dur = voices[voiceNumber].Dur();
+            if(dur > 0)
+            {
+                n = voices[voiceNumber].NumberOfNotes();
+                for(i = 0;i < n; i++)
+                {
+                    error = voices[voiceNumber].GetNote(i, &note);
+                    if(error.Get() == MuERROR_NONE)
+                    {
+                        if (note.Start() != lastStart)
+                        {
+                            density++;
+                        }
+                        lastStart = note.Start();
+                    }
+                }
+                density /= dur;
+            }
+        }
+        else
+            lastError.Set(MuERROR_INVALID_VOICE_NUMBER);
+    }
+    else
+        lastError.Set(MuERROR_MATERIAL_IS_EMPTY);
+    
+    return density;
 }
 
 void MuMaterial::SetNote(long noteNumber, MuNote inNote)	// [PUBLIC]
@@ -2657,7 +2733,8 @@ void MuMaterial::LoadScore(string fileName, short mode)	// [PUBLIC]
 	char tempLine[32];
 	int i, j;
 	MuNote theNote;
-	
+    stringstream tables;
+    
 	// get rid of any previous data in this material
 	Clear();
 	
@@ -2675,7 +2752,7 @@ void MuMaterial::LoadScore(string fileName, short mode)	// [PUBLIC]
 			{
 				// if function table found, store it..
 				case 'f':
-                    AddFunctionTables(inputLine);
+                    tables << inputLine << endl;
                     break;
 				
 				// if note line found, ...
@@ -2719,6 +2796,10 @@ void MuMaterial::LoadScore(string fileName, short mode)	// [PUBLIC]
 					break;
 			}
 		}
+        // if tables stream is not empty...
+        string temp = tables.str();
+        if (temp != "") // we save the tables to material...
+            SetFunctionTables(temp);
 	}
 	else
 	{
@@ -3040,12 +3121,19 @@ void MuMaterial::Sort( int voiceNumber, short field )	// [PUBLIC]
 void MuMaterial::Clear(void)
 {
 	MuError err(MuERROR_NONE);
-	if(voices != NULL)
-	{	
-		delete [] voices;
-		voices = NULL;
-		numOfVoices = 0;
-	}
+    int i;
+    // Leak Fix:
+    // in order to avoid memory leaks,
+    // before releasing the voice array, we need to go
+    // through each voice and release all the notes...
+    if(voices)
+    {
+        for(i = 0; i < numOfVoices; i++)
+            voices[i].Clear();
+        delete [] voices;
+        voices = NULL;
+        numOfVoices = 0;
+    }
 }
 
 void MuMaterial::Show( void )
@@ -3077,10 +3165,15 @@ string MuMaterial::FunctionTables(void)	// [PUBLIC]
 void MuMaterial::SetDefaultFunctionTables(void)	// [PUBLIC]
 {
     MuError err(MuERROR_NONE);
-	AddFunctionTables("f1 0 4096 10 1 .9 .1 .8 .2 .7 .3 .6 .4 .5");
-    AddFunctionTables("f2 0 4096 10 1 0 1 0 1 0 1 0 1");
-    AddFunctionTables("f3 0 4096 10 .1 .3 .5 .7 .5 .3 .1");
-    AddFunctionTables("f4 0 4096 10 .8 .6 .4 .2 .4 .6 .8");
+    stringstream tables;
+    
+    tables << "f1 0 4096 10 1 .9 .1 .8 .2 .7 .3 .6 .4 .5" << endl;
+    tables << "f2 0 4096 10 1 0 1 0 1 0 1 0 1" << endl;
+    tables << "f3 0 4096 10 .1 .3 .5 .7 .5 .3 .1" << endl;
+    tables << "f4 0 4096 10 .8 .6 .4 .2 .4 .6 .8" << endl;
+    
+    string temp = tables.str();
+    SetFunctionTables(temp);
 }
 
 void MuMaterial::SetFunctionTables(string inTables)	// [PUBLIC]

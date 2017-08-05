@@ -223,15 +223,15 @@ string MuNote::CsString(void)
 	cs_string += "\t";
 	sprintf(buff,"%.3f",Start());
 	cs_string += buff;
-	cs_string += "\t";
+	cs_string += "\t\t";
 	sprintf(buff,"%.3f",Dur());
 	cs_string += buff;
-	cs_string += "\t";
+	cs_string += "\t\t";
 	cs_string +=  PitchString();
 	cs_string += "\t\t";
 	sprintf(buff,"%.3f",Amp());
 	cs_string += buff;
-	cs_string += "\t";
+	cs_string += "\t\t";
 	
 	pBlock = Params();
 	numberOfParams = pBlock.Num();

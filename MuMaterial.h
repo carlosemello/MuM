@@ -41,9 +41,9 @@
  code) in the derived work's source and documentation files. The original MuM 
  implementation was writen by Carlos Eduardo Mello, at the University of Brasilia. 
  
-* @version 1.0
+* @version 1.0.4
 * @author Carlos Eduardo Mello
-* @date 3/5/2009
+* @date 16/7/2016
 **/
  
 #ifndef _MU_MATERIAL_H_
@@ -53,9 +53,8 @@
 
 
 // MUSIC CONSTANTS:
-
 const short LOWEST_C = 24; 
-const short HIGHEST_C = 108; 
+const short HIGHEST_C = 108;
 const short NUM_OF_SCALE_DEGREES = 7;
 const short NUM_OF_OCTAVES = 8;
 const short FULL_SCALE_SIZE = NUM_OF_SCALE_DEGREES * NUM_OF_OCTAVES; 
@@ -402,6 +401,26 @@ class MuMaterial
 	 *
 	 **/
 	float Dur(void);
+    
+    /**
+     * @brief Returns the  duration of the requested voice inside material
+     *
+     * @details
+     * Returns the total duration of the requested voice. This value includes any offset
+     * between time zero and the first note's start time. In other words, Dur() value
+     * starts in time 0.0 and runs through the end of the last sounding note in the voice.
+     * If requested voice is not a valid voice number for the material, Dur() issues an error
+     * and returns 0.
+     *
+     * @param
+     * voiceNumber (int) - index of the requested voice
+     *
+     * @return
+     * float - time in seconds
+     *
+     **/
+    float Dur(int voiceNumber);
+
 	
     // VOICES 
 	
@@ -731,6 +750,36 @@ class MuMaterial
 	 *
 	 **/			
 	long NumberOfNotes( int voiceNumber );
+    
+    
+    /**
+     * @brief Returns the melodic density of the requested voice
+     *
+     * @details
+     * MelodicDensity() returns a float indicating the average number of
+     * melodic notes per second in a given voice inside material. This
+     * indicator is measured here as the number of melodic notes
+     * within the requested voice divided by the voice's duration. 
+     * Since we are only interested in the horizontal dimension, multiple 
+     * notes articulated together are accounted as a single note.
+     *
+     * This kind of measurement may be used to compare melodic materials
+     * for the amount of movement within the line, as an aiding tool for 
+     * choosing melodies of various characters.
+     *
+     * If material is empty, or voiceNumber  is not a valid voice index number,
+     * or voiceNumber is not a valid voice, an error is issued and the method 
+     * returns 0.
+     *
+     * @param
+     * voiceNumber (int) - voice index
+     *
+     * @return
+     * int - average number of notes per second
+     *
+     **/
+    float MelodicDensity( int voiceNumber );
+
 	
 	/**
 	 * @brief Sets note 'noteNumber' of voice '0' to 'inNote'

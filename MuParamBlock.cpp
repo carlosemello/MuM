@@ -62,7 +62,11 @@ MuParamBlock & MuParamBlock::operator=(const MuParamBlock & inBlock)
 	
 	if(this != &inBlock)
 	{
-		delete [] values;
+        // if there was any previously allocated
+        // memory, we get rid of it...
+        if(values)
+            delete [] values;
+        
 		n = inBlock.numValues;
 		if(n > 0)
 		{
@@ -84,7 +88,7 @@ MuParamBlock & MuParamBlock::operator=(const MuParamBlock & inBlock)
 // subscript
 float& MuParamBlock::operator[](uShort i)
 {
-	return values[i];
+        return values[i];
 }
 
 bool MuParamBlock::operator==(const MuParamBlock & inBlock)
