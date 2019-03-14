@@ -179,3 +179,17 @@ extern void ShowInts( int * array, int n )
 		cout << array[i] << " ";
 	cout << endl;
 }
+
+// UTILITIES ==================================
+
+extern long ClockStamp(void)
+{
+    timeval tv;
+    gettimeofday(&tv, NULL);
+    return ((tv.tv_sec * ONE_SECOND) + (tv.tv_usec));
+}
+
+extern long TimeToStamp(float secs)
+{
+    return (long)(secs * ONE_SECOND);
+}

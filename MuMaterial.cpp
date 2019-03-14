@@ -1032,7 +1032,7 @@ MuMaterial MuMaterial::GetNotes( int voiceNumber, long from, long through )
 			// if requested range is valid...
 			if(		( (from >= 0) && (from < n) ) &&
 					( (through >=0) && (through < n) ) &&
-					( (through > from) )
+					( (through >= from) )
 				)
 			{
 				for( i = from; i <= through; i++ )
@@ -1129,6 +1129,57 @@ MuMaterial MuMaterial::GetNotesSoundingAt(int voiceNumber, float time)
 		lastError.Set(MuERROR_MATERIAL_IS_EMPTY);
 	
     return outMaterial;
+}
+
+MuMaterial MuMaterial::GetFrase(int voiceNumber, long from)
+{
+    MuMaterial mat;
+    MuNote note;
+    long i, through;
+    bool foundRest = false;
+    
+    if(voiceNumber >= NumberOfVoices())
+    {
+        lastError.Set(MuERROR_INVALID_VOICE_NUMBER);
+        return mat;
+    }
+    
+    long n = NumberOfNotes(voiceNumber);
+    
+    if(from >= n)
+    {
+        lastError.Set(MuERROR_INVALID_PARAMETER);
+        return mat;
+    }
+    
+    // Starting at the requested note...
+    for(i = from; i < n; i++)
+    {
+        // check every note...
+        note = GetNote(i);
+        
+        // if we find a rest...
+        if(note.Amp() == 0.0 || note.Pitch() == 0)
+        {
+            // we point to the last note before the rest...
+            through = (i - 1);
+            // and extract the frase up to that point...
+            mat = GetNotes(0, from, through);
+            // then flag that we found the rest...
+            foundRest = true;
+            // and get out of the loop...
+            break;
+        }
+    }
+    
+    // if no rest was found...
+    if(!foundRest)
+    {
+        // return the notes through the end of the voice...
+        mat = GetNotes(0, from, (n-1));
+    }
+    
+    return mat;
 }
 
 bool MuMaterial::Contains( int voiceNumber, int pitch )
@@ -1870,6 +1921,10 @@ void MuMaterial::CycleRhythm(int voiceNumber, int times)
 	Sort(0);
 }
 
+void MuMaterial::AddRestToNote(int voiceNumber, long noteNumber, float ratio)
+{
+    
+}
 
 // Segmentation
 
@@ -2807,6 +2862,125 @@ void MuMaterial::LoadScore(string fileName, short mode)	// [PUBLIC]
 	}
 }
 
+// populates the receiving material with data from a MIDI buffer...
+void MuMaterial::LoadMIDIBuffer(MuMIDIBuffer inBuffer, short mode)
+{
+    lastError.Set(MuERROR_NONE);
+    long i,j,n;
+    MuNote note;
+    MuMIDIMessage firstEvent,secondEvent;
+    bool foundNote = false;
+    
+    // Go through every noteOn event, comparing it to the remaining
+    // events, until we find a suitable note termination...
+    n = inBuffer.count;
+    for(i = 0; i < n; i++)
+    {
+        firstEvent = inBuffer.data[i];
+        foundNote = false;
+        
+        // if this is a noteOn event and key velocity is not zero...
+        if( ( (firstEvent.status & 0xF0) == 0x90) && (firstEvent.data2 != 0) )
+        {
+            // we look ahead for its corresponding noteOff event...
+            for(j = i+1; j < n; j++)
+            {
+                secondEvent = inBuffer.data[j];
+                
+                // if next event is for the same channel and same pitch...
+                if(((firstEvent.status & 0x0F) == (secondEvent.status & 0x0F)) &&
+                   (firstEvent.data1 == secondEvent.data1) )
+                {
+                    // if this is a noteOff for the same pitch...
+                    if( ((secondEvent.status & 0xF0) == 0x80) ||
+                       // or if it is a noteOn and key velocity is 0...
+                       (((secondEvent.status & 0xF0) == 0x90) && (secondEvent.data2 == 0))
+                       )
+                    {
+                        // we store the complete note...
+                        note.SetFromMIDI(firstEvent, secondEvent);
+                        AddNote(note);
+                        note.Clear();
+                        // if we found a complete note, we skip the inner loop
+                        // and move on to the next noteOn...
+                        foundNote = true;
+                        break;
+                    }
+                }
+            }
+            
+            // after comparing to all remaining events, if we couldn't find
+            // a note termination, we store the event without duration...
+            if (!foundNote)
+            {
+                note.SetStart(firstEvent.time);
+                note.SetPitch(firstEvent.data1);
+                note.SetAmp(firstEvent.data2/128.0);
+                note.SetInstr((firstEvent.status & 0x0F) + 1);
+                note.SetDur(0);
+                AddNote(note);
+                note.Clear();
+
+            }
+        }
+    }
+    
+    // After checking the entire buffer for notes,
+    // decide what to do with the notes that have duration 0.
+    n = NumberOfNotes();
+    for(i = 0; i < n; i++)
+    {
+        note = GetNote(i);
+        if(note.Dur() == 0)
+        {
+            switch(mode)
+            {
+                // in purge mode, remove all incomplete notes...
+                case MIDI_BUFFER_MODE_PURGE:
+                {
+                    RemoveNote(i);
+                    i--;
+                    n--;
+                    break;
+                }
+                    
+                // in extend mode, incomplete notes last until the end
+                // of material. if note starts beyond the duration of
+                // all other notes, it gets purged.
+                case MIDI_BUFFER_MODE_EXTEND:
+                {
+                    float dur = Dur()-note.Start();
+                    if (dur != 0)
+                    {
+                        note.SetDur(dur);
+                        SetNote(i, note);
+                    }
+                    else
+                    {
+                        RemoveNote(i);
+                    }
+                    break;
+                }
+                // in melodic mode, incomlete notes last until
+                // the begining of next note. if note is the last
+                case MIDI_BUFFER_MODE_MELODIC:
+                {
+                    if(i == n-1)
+                    {
+                        RemoveNote(i);
+                    }
+                    else
+                    {
+                        MuNote nextNote = GetNote(i+1);
+                        note.SetDur(nextNote.Start() - note.Start());
+                        SetNote(i, note);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+}
 
 // Generates Orchestra Definitions...
 string MuMaterial::Orchestra(void)	// [PUBLIC]

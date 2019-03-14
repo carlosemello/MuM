@@ -23,6 +23,7 @@
 #ifndef _MU_UTIL_H_
 #define _MU_UTIL_H_
 
+#include <sys/time.h>
 #include "MuError.h"
 
 // CONSTANTS
@@ -53,6 +54,9 @@ const short ACC_FAVOR_FLATS = 1;
 
 //!@brief acidentals to use for altered notes: sharps
 const short ACC_FAVOR_SHARPS = 2;
+
+//!@brief One second duration in microseconds
+const long ONE_SECOND = 1000000;
 
 // PROTOTYPES
 
@@ -161,5 +165,44 @@ extern void SortFloats( float * array, int size);
  **/
 extern void ShowInts( int * array, int size );
 
+// Utility...
+/**
+ * @brief looks up the current system time and returns it as a
+ * microsecond value
+ *
+ * @details
+ *
+ * ClockStamp() reads the current system time using gettimeofDay()
+ * It then converts the 'timeval' structure returned by the system call
+ * to the corresponding value in microseconds. This method is extern and
+ * can be used at any time by calling code for calculating time offsets
+ * and other usefull utilities.
+ *
+ * @return
+ * unsigned long: the current system time in microseconds (for
+ * information about reference time values type 'man gettimeofday'
+ * at a unix terminal)
+ *
+ **/
+extern long ClockStamp(void);
+
+/**
+ * @brief
+ *
+ * converts input time from seconds to microseconds
+ *
+ * @details
+ *
+ * TimeToStamp() simply returns the time provided in 'secs' to its
+ * corresponding value in microseconds. In otherwords, it multiplies
+ * 'secs' by 1000000. This method is extern and can be used
+ * at any time by calling code for calculating time offsets
+ * and other usefull utilities
+ *
+ * @return
+ * unsigned long: requested time in microseconds
+ *
+ **/
+extern long TimeToStamp(float secs);
 
 #endif

@@ -27,6 +27,7 @@
 #define _MU_NOTE_H_
 
 #include "MuParamBlock.h"
+#include "MuMIDI.h"
 
 
 // Constants
@@ -71,28 +72,6 @@ struct cs_pitch
 };
 typedef struct cs_pitch cs_pitch;
 
-/** 
- * @brief Note information as MIDI events
- *
- * @details
- *
- * This structure is used to describe a note as MIDI data.
- * An MuNote object can output note-on and note-off info,
- * using this struct. See MuNote::MIDIOn() and  MuNote::MIDIOff()
- * for more details.
- **/
-struct MuMIDIMessage
-{
-	//! @brief MIDI status byte: [1XXXCCCC]
-	unsigned char status;
-	//! @brief MIDI data byte: pitch number (0-127) [0VVVVVVV]
-	unsigned char data1;
-	//! @brief MIDI data byte: key velocity (0-127) [0VVVVVVV]
-	unsigned char data2;
-	//! @brief time stamp in seconds
-	float time;
-};
-typedef struct MuMIDIMessage MuMIDIMessage;
 
 /**
  * @class MuNote
@@ -598,5 +577,23 @@ class MuNote
 	 *
 	 **/
 	MuMIDIMessage MIDIOff(void);
+    
+    /**
+     * @brief Returns a deactivation event for the note as an MuMIDIMessage struct
+     *
+     * @details
+     *
+     * MIDIOff()  converts the note's data to MIDI format and returns the
+     * note-off event for the note. Note data is assigned as follows:
+     * <ul>
+     * <li>::End() - becomes time stamp in seconds (time field)
+     * <li>Instr - becomes channel choice in range 0-F (status field - bits 0 through 3)
+     * <li>Pitch - becomes data1 field
+     * <li>data2 field receives 0 (zero)
+     * </ul>
+     * @return  MuMIDIMessage structure
+     *
+     **/
+    void SetFromMIDI(MuMIDIMessage noteOn, MuMIDIMessage noteOff);
 };
 #endif

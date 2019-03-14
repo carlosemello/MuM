@@ -326,3 +326,15 @@ MuMIDIMessage MuNote::MIDIOff(void)
 	noteOff.time = ( start + dur );
 	return noteOff;
 }
+
+void MuNote::SetFromMIDI(MuMIDIMessage noteOn, MuMIDIMessage noteOff)
+{
+    // This was a quick and dirty implementation!!
+    // FIX: perform sanity checks on input data.
+    // FIX: verify ranges, data types and numeric conversions
+    SetStart(noteOn.time);
+    SetPitch(noteOn.data1);
+    SetAmp(noteOn.data2/128.0);
+    SetInstr((noteOn.status & 0x0F) + 1);
+    SetDur(noteOff.time - noteOn.time);
+}

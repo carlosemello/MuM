@@ -99,6 +99,10 @@ const short EIGHTH_DEGREE = 7;
 const short LOAD_MODE_TIME = 0;
 const short LOAD_MODE_DIRECT = 1;
 
+const short MIDI_BUFFER_MODE_PURGE = 0;
+const short MIDI_BUFFER_MODE_EXTEND = 1;
+const short MIDI_BUFFER_MODE_MELODIC = 2;
+
 /**
  * @class MuMaterial
  *
@@ -925,6 +929,36 @@ class MuMaterial
 	 *
 	 **/
 	MuMaterial GetNotesSoundingAt(int voiceNumber, float time);
+    
+    /**
+     * @brief Returns all the notes before the next rest
+     *
+     * @details
+     * GetFrase() scans the requested voice looking for a rest, starting at
+     * the note indicated by index 'from'. When it finds a rest, GetFrase()returns
+     * a material object containing (in voice 0) every note, within voice 'voiceNumber'
+     * of this material, between note 'from' and the last note before the rest.
+     *
+     * GetFrase() is meant to be used with voices that contain mostly melodic
+     * data. It also assumes that frases are separated by rests. When used with
+     * complex, chord-like textures, containing multiple rests, the result is
+     * unpredictable. If GetFrase() finds no rest in the requeste voice,
+     * the entire voice content is returned in the output material.
+     *
+     * (See also: in order to force frase limits without modifying the
+     * rhythmic flow of the music, it is possible to use AddRestToNote() to
+     * insert a small rest between frases. Check documentation for more info)
+     *
+     * @param
+     * voiceNumber (int) - voice index
+     * @param
+     * from (long) - index to starting note
+     *
+     * @return
+     * MuMaterial - material containing requested frase
+     *
+     **/
+    MuMaterial GetFrase(int voiceNumber, long from);
 	
 	/**
 	 * @brief returns true if material contains input note (pitch) at voice 'voiceNumber'
@@ -1387,6 +1421,34 @@ class MuMaterial
 	 *
 	 **/	
 	void CycleRhythm(int voiceNumber, int times);
+    
+    /**
+     * @brief 	Turns part of the note into a rest
+     *
+     * @details
+     * AddRestToNote() transforms part of a note's length into silence,
+     * by cropping some of the note's duration and appending a rest of the
+     * corresponding size right after it. The size of the rest will always
+     * be exactly the same as that of the time taken from the end of the note, 
+     * so that the rhythmic flow stays untouched. surrounding notes remain untouched.
+     *
+     * The third argument is optional and informs how much of the note
+     * should be cropped. A value of 1.0 turns the entire note into a rest;
+     * a value of 0.5 removes half of the note's length; and so forth.
+     * If no value is provided, a default value of 0.25 (1/4th rest) is used.
+     *
+     * (See also: this method can be used in conjunction with GetFrase(), to 
+     * mark frase limits, when extracting sections of a melody from a given voice)
+     *
+     * @param
+     * voiceNumber (int) - voice index
+     * @param
+     * noteNumber (long ) - index of the note to be shortened
+     * @param
+     * ratio (float) - rest length as a percentage of the note (1.0 = 100%)
+     *
+     **/
+    void AddRestToNote(int voiceNumber, long noteNumber, float ratio = 0.25);
     
     // Segmentation
 	
@@ -2153,6 +2215,49 @@ class MuMaterial
 	*
 	**/
     void LoadScore(string fileName, short mode = LOAD_MODE_TIME);
+    
+    
+    /**
+     * @brief
+     * Loads an MuMIDIBuffer into material
+     *
+     * @details
+     * Loads a MIDI buffer (as defined in MuMIDI.h), into the receiving material. The buffer
+     * is a structure that contains a pointer to an array of MIDI messages and counter variables
+     * that keep track of the number of messages in the array. 'inBuffer.data' contains the MID
+     * events to be loaded. Each event is a structure of type MuMIDIMessage. 'inBuffer.max'
+     * contains the size of the array, as it was allocated. 'inBuffer.count' contains the number
+     * of valid messages in the array. 'count' may, occasionaly be less than 'max', but it
+     * shoould never exceed it.
+     *
+     * MIDI buffers are mostly used for MIDI input by MuRecorder, but may be employed 
+     * independently if there is any need to deal with music in MIDI format for some specific
+     * application. All related definitions are found in MuMIDI.h.
+     * 
+     * LoadMIDIBuffer can be used in one of two modes. If MIDI_BUFFER_MODE_PURGE (the default)
+     * is selected and the method finds noteOn events with no corresponding noteOffs by the end
+     * of the buffer, these starting events are disarded to avoid MIDI panic situations. if
+     * instead the buffer was loaded in EXTEND mode (MIDI_BUFFER_MODE_EXTEND), the unpaired
+     * note starts will all be terminated with the last noteOff found in the buffer. In other
+     * words, the notes will be sustained or extended.
+     *
+     * @note
+     * If inBufer contains a valid MIDI buffer, LoadMIDIBuffer will release the associated memory
+     * after extracting its contents as notes.
+     *
+     * @param
+     * inBuffer (MuMIDIBuffer) - a structure containing a buffer of MIDI messages
+     *
+     * @param
+     * mode (short) - defines how incomplete notes are treated. MIDI_BUFFER_MODE_PURGE means
+     * unterminated notes are discarded; MIDI_BUFFER_MODE_EXTEND means all unterminated
+     * notes will be endend with the last noteOff.
+     *
+     * @return
+     * void - LoadMIDIBuffer returns void. If an error is found it is stored as the last error
+     * in the receiving material
+     **/
+    void LoadMIDIBuffer(MuMIDIBuffer inBuffer, short mode = MIDI_BUFFER_MODE_PURGE);
 	
     /**
      * @brief
