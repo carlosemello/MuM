@@ -425,6 +425,35 @@ public:
      *
      **/
     static MuMIDIBuffer JoinMIDIBuffers(MuMIDIBuffer buff1, MuMIDIBuffer buff2);
+    
+    /**
+     * @brief extracts from the input buffer all noteOn events that do not have a corresponding noteOff
+     *
+     * @details
+     *
+     * ExtractInvalidNotes() extracts from the input buffer all noteOn events that do not have a corresponding noteOff
+     *
+     * @note
+     *
+     * The extracted buffer must be released by calling code when it is no
+     * longer needed.
+     *
+     * @param
+     *
+     * buff (MuMIDIBuffer) - input buffer containing the notes to be extracted
+     *
+     *
+     * @return
+     *
+     * MuMIDIBuffer - the return value is an MuMIDIBuffer structure containing
+     * the extracted MIDI data. The memory allocated for the 'data' field in
+     * the returning buffer structure must be released to avoid memory leaks.
+     * If calling code needs a copy of this buffer data, the 'data' field
+     * should be deep copied.
+     *
+     **/
+    static MuMIDIBuffer ExtractInvalidNotes(MuMIDIBuffer buff);
+
 };
 
 #endif /* MuRecoder_H */

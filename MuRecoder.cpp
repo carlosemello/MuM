@@ -141,7 +141,7 @@ bool MuRecorder::SelectMIDISource(int sourceNumber)
             cout << "Couldn't disconnect from previously selected source..." << endl;
     }
     
-    if(sourceNumber > 0)
+    if(sourceNumber >= 0)
     {
         midiSource = MIDIGetSource(sourceNumber);
         if (midiSource != 0)
@@ -287,4 +287,56 @@ MuMIDIBuffer MuRecorder::JoinMIDIBuffers(MuMIDIBuffer buff1, MuMIDIBuffer buff2)
     }
     
     return res;
+}
+
+MuMIDIBuffer MuRecorder::ExtractInvalidNotes(MuMIDIBuffer buff)
+{
+    MuMIDIBuffer newBuff;
+    MuMIDIMessage first,second;
+    long i,j,k,n;
+    k = 0;
+    bool matchFound = false;
+    
+    n = buff.count;
+    newBuff.data = new MuMIDIMessage[n];
+    if(newBuff.data)
+    {
+        newBuff.max = n;
+        newBuff.count = n;
+        
+        // for each noteOn event in the input buffer,
+        // check remaining events for a matching noteOff
+        for(i = 0; i < n; i++)
+        {
+            first = buff.data[i];
+            matchFound = false;
+            if(((first.status & 0xF0) == 0x90) && (first.data2 != 0))
+            {
+                for(j = i+1; j < n; j++)
+                {
+                    second = buff.data[j];
+                    
+                    if( // this is a noteOff or...
+                      (((second.status & 0xF0) == 0x80) ||
+                       // a noteOn with key velocity zero...
+                      (((second.status & 0xF0) == 0x90) && (second.data2 == 0))) &&
+                      // and the event is for the same channel and same pitch...
+                      (((second.status & 0x0F) == (first.status & 0x0F)) && (second.data1 == first.data1))
+                    )
+                    {
+                        matchFound = true;
+                        break;
+                    }
+                }
+                
+                if(!matchFound)
+                {
+                    newBuff.data[k] = buff.data[i];
+                    k++;
+                }
+            }
+        }
+    }
+    newBuff.count = k;
+    return newBuff;
 }
