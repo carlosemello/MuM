@@ -427,11 +427,11 @@ public:
     static MuMIDIBuffer JoinMIDIBuffers(MuMIDIBuffer buff1, MuMIDIBuffer buff2);
     
     /**
-     * @brief extracts from the input buffer all noteOn events that do not have a corresponding noteOff
+     * @brief returns invalid notes extracted from the input buffer      
      *
      * @details
      *
-     * ExtractInvalidNotes() extracts from the input buffer all noteOn events that do not have a corresponding noteOff
+     * ExtractInvalidNotes() extracts from the input buffer all noteOn events that do not have a corresponding noteOff and returns them in another MIDI buffer structure.
      *
      * @note
      *
