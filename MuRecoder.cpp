@@ -218,15 +218,24 @@ void MuRecorder::MIDIInputCallback (const MIDIPacketList *list, void *procRef,vo
         while(j < nBytes)
         {
             Byte next = packet->data[j];
-            // if this is a note event (on or off)...
-            if( ((next & 0xF0) == 0x90) || ((next & 0xF0) == 0x80))
+            Byte mask = (next & 0xF0);
+            // if this is a voice message...
+            if( (mask >= MU_NOTE_OFF) && (mask <= MU_PITCH_BEND))
             {
                 // extract and store it...
                 msg.status = next;
                 msg.data1 = packet->data[j+1];
-                msg.data2 = packet->data[j+2];
+                if(mask == MU_PROGRAM_CHANGE)
+                {
+                    msg.data2 = msg.data1; // either this or 0
+                    j += 2;
+                }
+                else
+                {
+                    msg.data2 = packet->data[j+2];
+                    j += 3;
+                }
                 recorder->AddMessageToBuffer(msg);
-                j += 3;
             }
             else // otherwise just ignore it and move to the next byte...
             {
@@ -303,9 +312,7 @@ MuMIDIBuffer MuRecorder::ExtractInvalidNotes(MuMIDIBuffer buff)
     {
         newBuff.max = n;
         newBuff.count = n;
-        
-        // for each noteOn event in the input buffer,
-        // check remaining events for a matching noteOff
+        // for each noteOn event in the input buffer, check remaining events for a matching noteOff
         for(i = 0; i < n; i++)
         {
             first = buff.data[i];
@@ -315,7 +322,6 @@ MuMIDIBuffer MuRecorder::ExtractInvalidNotes(MuMIDIBuffer buff)
                 for(j = i+1; j < n; j++)
                 {
                     second = buff.data[j];
-                    
                     if( // this is a noteOff or...
                       (((second.status & 0xF0) == 0x80) ||
                        // a noteOn with key velocity zero...
@@ -331,7 +337,7 @@ MuMIDIBuffer MuRecorder::ExtractInvalidNotes(MuMIDIBuffer buff)
                 
                 if(!matchFound)
                 {
-                    newBuff.data[k] = buff.data[i];
+                    newBuff.data[k] = first;
                     k++;
                 }
             }
@@ -340,3 +346,32 @@ MuMIDIBuffer MuRecorder::ExtractInvalidNotes(MuMIDIBuffer buff)
     newBuff.count = k;
     return newBuff;
 }
+
+MuMIDIBuffer MuRecorder::ExtractEventsOfType(unsigned char eventType, MuMIDIBuffer buff )
+{
+    MuMIDIBuffer newBuff;
+    MuMIDIMessage event;
+    long i,j,n;
+    j = 0;
+    n = buff.count;
+    newBuff.data = new MuMIDIMessage[n];
+    if(newBuff.data)
+    {
+        newBuff.max = n;
+        newBuff.count = n;
+        // for each event in the input buffer, check to see if
+        // its type corresponds to the requested type...
+        for(i = 0; i < n; i++)
+        {
+            event = buff.data[i];
+            if( (event.status & 0xF0) == eventType)
+            {
+                newBuff.data[j] = event;
+                j++;
+            }
+        }
+    }
+    newBuff.count = j;
+    return newBuff;
+}
+

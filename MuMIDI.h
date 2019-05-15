@@ -93,7 +93,14 @@ typedef struct MuMIDIMessage MuMIDIMessage;
 //! @brief default size for MIDI message buffers
 const long DEFAULT_BUFFER_SIZE = 1024;
 
-
+// MIDI voice message masks...
+const unsigned char MU_NOTE_OFF = 0x80;
+const unsigned char MU_NOTE_ON = 0x90;
+const unsigned char MU_POLY_AFTERTOUCH = 0xA0;
+const unsigned char MU_CONTROL = 0xB0;
+const unsigned char MU_PROGRAM_CHANGE = 0xC0;
+const unsigned char MU_MONO_AFTERTOUCH = 0xD0;
+const unsigned char MU_PITCH_BEND = 0xE0;
 
 
 #endif /* MuMIDI_H */

@@ -453,7 +453,40 @@ public:
      *
      **/
     static MuMIDIBuffer ExtractInvalidNotes(MuMIDIBuffer buff);
-
+    
+    /**
+     * @brief returns all events of a given type found in the input buffer
+     *
+     * @details
+     *
+     * ExtractEventsOfType() extracts from the input buffer all events of the 
+     * requested type and returns them in another MIDI buffer structure. The
+     * desired event type is indicated by the first parameter (eventType).
+     * However, although event types are specified as a status byte mask, only
+     * the types defined by specific constants may be requested.
+     *
+     * @note
+     *
+     * The extracted buffer must be released by calling code when it is no
+     * longer needed.
+     *
+     * @param eventType (unsigned char) - status byte mask constant used to
+     * determine what kind of events should be extracted from input buffer
+     *
+     * @param buff (MuMIDIBuffer) - input buffer containing the events to be extracted
+     *
+     * @return
+     *
+     * MuMIDIBuffer - the return value is an MuMIDIBuffer structure containing
+     * the extracted MIDI data. The memory allocated for the 'data' field in
+     * the returning buffer structure must be released to avoid memory leaks.
+     * If calling code needs a copy of this buffer data, the 'data' field
+     * should be deep copied.
+     *
+     **/
+    MuMIDIBuffer ExtractEventsOfType(unsigned char eventType, MuMIDIBuffer buff);
 };
+
+
 
 #endif /* MuRecoder_H */
