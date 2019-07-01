@@ -205,4 +205,25 @@ extern long ClockStamp(void);
  **/
 extern long TimeToStamp(float secs);
 
+/**
+ * @brief
+ *
+ * colapses a MIDI pitch number to its semitone pitch-class
+ * representation in the middle octave
+ *
+ * @details
+ *
+ * MIDIToPitchClass() simply converts a given MIDI pitch number
+ * to its abstract pitch-class representation. Resulting pitch
+ * code will be an integer between 60 and 71, representing one of
+ * the possible twelve tones of any octave, in the tempered scale.
+ *
+ *
+ * @return
+ * unsigned long: requested time in microseconds
+ *
+ **/
+extern int MIDIToPitchClass(int midiPitch);
+
+
 #endif

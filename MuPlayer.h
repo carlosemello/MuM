@@ -68,10 +68,8 @@ const int MESSAGE_LENGTH = 3;
  **/
 struct EventQueue
 {
-    //! @brief address of an MuMIDIMessage array
-    MuMIDIMessage * buffer;
-    //! @brief number of valid indexes in the message array
-    long n;
+    //! @brief buffer of messages to be sent
+    MuMIDIBuffer buffer;
     //! @brief index of next message to be sent
     long next;
     //! @brief activation flag: true == active, false == inactive;
@@ -396,7 +394,7 @@ class MuPlayer
      * and starts the working thread, which, in turn, extracts data from the
      * material and activates the queue. If Play() cannot find an inactive
      * queue to use, it returns false, in which case the playback request
-     * will not be honored.
+     * is not honored.
      *
      * The playback pool is just an array of EventQueue structures, which
      * can be used and reused during the course of the application.
@@ -430,7 +428,61 @@ class MuPlayer
     bool Play(MuMaterial & inMat, int mode);
     
     /**
-     * @brief starts an event queue working thread
+     * @brief initiates a playback queue for the requested buffer of MIDI
+     * events.
+     *
+     * @details
+     *
+     * SendEvents() takes the input MIDI event buffer contained in argument 
+     * 'inEvents' and assigns an event queue from the Player's playback pool
+     * to handle those events.
+     *
+     * SendEvents() goes through the playback pool only once,
+     * looking for inactive queues to use. it calls StartQueueThread() with 
+     * the adress of the MIDI buffer to be sent. That method stores a copy
+     * of that address inside the queue structure and starts a working thread, 
+     * which, in turn, extracts data from the buffer and activates the queue.  
+     * If SendEvents() cannot find an inactive queue to use, it returns false, 
+     * in which case the send request is not honored.
+     *
+     * The playback pool is just an array of EventQueue structures, which
+     * can be used and reused during the course of the application.
+     * The pool has a fixed size which is determined at compile time.
+     * Since not all queues are in use all the time,
+     * recycling them allows more efficient use of resources.
+     * If for any reason the pool size turns out to be too small, it can be
+     * increased by changing the value of MAX_QUEUES at the begining of
+     * MuPlayer's header file.
+     *
+     * @code {.cpp}
+     *
+     * const int MAX_QUEUES = 100;
+     *
+     * @endcode
+     *
+     * @note     
+     *
+     * SendEvents() does not create a separate working thread. Instead, it
+     * enqueues MIDI events directly to the playback pool. Therefore, MIDI
+     * buffers for SendEvents() should typically be short, so they don't
+     * significantly impact performance and, consequently, music 
+     * synchronization.
+     *
+     * @param
+     *
+     * inEvents (MuMIDIBuffer) - events to be sent. this buffer should be
+     * allocated by calling code and is released inside SendEvents().
+     *
+     * @return
+     *
+     * bool - SendEvents() returns false if (a) it couldn't find an
+     * idle event queue in the pool, otherwise it returns true.
+     *
+     **/
+    bool SendEvents(MuMIDIBuffer events);
+    
+    /**
+     * @brief starts an event queue working thread to playback notes
      *
      * @details
      *
@@ -452,6 +504,33 @@ class MuPlayer
      *
      **/
     bool StartQueueThread(MuMaterial & inMat, int queueIdx);
+
+    
+    /**
+     * @brief starts an event queue working thread for MIDI events
+     *
+     * @details
+     *
+     * This overloaded version of StartQueueThread() works with
+     * a MIDI buffer instead of an MuMaterial.
+     * Each queue has a working thread associated with it. It is
+     * used to fill up the queue with MIDI events extracted from
+     * the input buffer. StartQueueThread() initiates this
+     * thread. The thread terminates automatically when all events
+     * from the input buffer are enqueued for playback.
+     *
+     * @param
+     * inMat (MuMIDIBuffer): buffer of events to be enqueued
+     *
+     * @param
+     * queueIdx (int): index of the selected queue
+     *
+     * @return
+     * bool: StartQueueThread() returns false if it cannot start
+     * the working thread and true otherwise
+     *
+     **/
+    bool StartQueueThread(MuMIDIBuffer events, int queueIdx);
     
     /**
      * @brief extracts MIDI events from input material and puts them
@@ -467,11 +546,40 @@ class MuPlayer
      * method concludes its work, it sets the queue's 'active' flag to
      * true, so its events can be accessd  by the scheduler.
      *
+     * @param
+     * arg (void*) - this argument should receive the address of
+     * the event queue this working thread will operating on.
+     *
      * @return
      * void *:  EnqueueMaterial() terminates when the tread exits
      *
      **/
-    static void * EnqueueMaterial(void*);
+    static void * EnqueueMaterial(void* arg);
+    
+    
+    /**
+     * @brief copies MIDI events from input buffer to the
+     * corresponding playback event queue.
+     *
+     * @details
+     *
+     * EnqueueEvents() is a thread function for a queue's working
+     * thread. It is initiated by the buffer verion ofStartQueueThread() 
+     * and is responsible for copying each MIDI event in the buffer to
+     * be placed in the queue in chronological order, so they can be
+     * scheduled for playback by the scheduler thread. When this method
+     * concludes its work, it sets the queue's 'active' flag to true,
+     * so its events can be accessd  by the scheduler.
+     *
+     * @param
+     * arg (void*) - this argument should receive the address of
+     * the event queue this working thread will be operating on.
+     *
+     * @return
+     * void *:  EnqueueEvents() terminates when the tread exits
+     *
+     **/
+    static void * EnqueueEvents(void* arg);
     
     /**
      * @brief starts the event scheduling thread
@@ -508,8 +616,8 @@ class MuPlayer
      * if the stamp is expired.
      *
      * @param
-     * pool (void *): pointer to the plyback pool; as the scheduler thread
-     * function is static, it needs to be passed the playback pool to allow 
+     * pool (void *): pointer to the player object; as the scheduler thread
+     * function is static, it needs to have access the playback pool to allow
      * access to the event queues. This void pointer needs to be cast to
      * (EventQueue *).
      *
@@ -517,7 +625,7 @@ class MuPlayer
      * void *:  ScheduleEvents() terminates when the tread exits
      *
      **/
-    static void * ScheduleEvents(void * pool);
+    static void * ScheduleEvents(void * pl);
     
     /**
      * @brief sends MIDI messages to the MIDI System

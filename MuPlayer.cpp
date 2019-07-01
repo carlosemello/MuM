@@ -18,8 +18,9 @@ MuPlayer::MuPlayer(void)
     // to default values...
     for(int i = 0; i < MAX_QUEUES; i++)
     {
-        eqPool[i].buffer = NULL;
-        eqPool[i].n = 0;
+        eqPool[i].buffer.data = NULL;
+        eqPool[i].buffer.max = 0;
+        eqPool[i].buffer.max = 0;
         eqPool[i].active = false;
         eqPool[i].loading = false;
         eqPool[i].paused = false;
@@ -39,7 +40,7 @@ MuPlayer::MuPlayer(void)
 
 MuPlayer::~MuPlayer(void)
 {
-    
+    Reset();
 }
 
 void MuPlayer::CleanPlaybackPool(void)
@@ -47,10 +48,11 @@ void MuPlayer::CleanPlaybackPool(void)
     // Clean Playback Pool
     for(int i = 0; i < MAX_QUEUES; i++)
     {
-        if(eqPool[i].buffer)
-            delete [] eqPool[i].buffer;
-        eqPool[i].buffer = NULL;
-        eqPool[i].n = 0;
+        if(eqPool[i].buffer.data)
+            delete [] eqPool[i].buffer.data;
+        eqPool[i].buffer.data = NULL;
+        eqPool[i].buffer.max = 0;
+        eqPool[i].buffer.count = 0;
         eqPool[i].active = false;
         eqPool[i].loading = false;
         eqPool[i].paused = false;
@@ -247,6 +249,40 @@ bool MuPlayer::Play(MuMaterial & inMat, int mode)
     return true;
 }
 
+bool MuPlayer::SendEvents(MuMIDIBuffer events)
+{
+    int selectedQueue = -1;
+    int i;
+    
+    // at the end of this loop, if at
+    // least one queue is available,
+    // selectedQueue contains its index..
+    for (i = 0; i < MAX_QUEUES; i++)
+    {
+        // if the current queue is not being played or filled,...
+        if(eqPool[i].active == false && eqPool[i].loading == false)
+        {
+            // it can be selected for a new material...
+            selectedQueue = i;
+            // mark queue as under construction...
+            eqPool[i].loading = true;
+            break;
+        }
+    }
+    // if unused queue is found...
+    if(selectedQueue >= 0)
+    {
+        // start the queue thread...
+        StartQueueThread(events,selectedQueue);
+    }
+    else
+    {
+        // otherwise report failure...
+        return false;
+    }
+    return true;
+}
+
 bool MuPlayer::StartQueueThread(MuMaterial & inMat, int queueIdx)
 {
     int res;
@@ -268,91 +304,166 @@ bool MuPlayer::StartQueueThread(MuMaterial & inMat, int queueIdx)
     return true;
 }
 
+bool MuPlayer::StartQueueThread(MuMIDIBuffer events, int queueIdx)
+{
+    int res;
+    
+    // make a copy of the input event buffer so the thread can
+    // work on it safely, as it will be working assynchronously
+    eqPool[queueIdx].buffer = events;
+    
+    // Start the thread...
+    res = pthread_create(&(eqPool[queueIdx].queueThread), NULL, MuPlayer::EnqueueEvents, (void*)(&eqPool[queueIdx]));
+    if(res)
+    {
+        // if we fail, terminate process...
+        cout << "THREAD ERROR! - Terminating..." << endl;
+        exit(EXIT_FAILURE);
+    }
+    
+    // if successful...
+    return true;
+    
+    
+    return true;
+}
+
 void * MuPlayer::EnqueueMaterial(void* arg)
 {
     int numVoices, i;
     MuNote note;
-    long numNotes, nextEvent, j, k;
+    long numNotes,numEvents,nextEvent, j, k;
     EventQueue * queue = (EventQueue *)arg;
     
     // get the total number of notes in input material...
     numNotes = queue->material.NumberOfNotes();
     
     // each note needs two MIDI events (on/off)
-    numNotes *= 2;
+    numEvents = numNotes * 2;
     
     // allocate memory for the note events...
-    if(numNotes > 0)
+    if(numEvents > 0)
     {
         // Attention! this buffer needs to be released when
         // the scheduler is done sending its events...
-        queue->buffer = new MuMIDIMessage[numNotes];
-        if(queue->buffer)
-            queue->n = numNotes;
-    }
-    
-    // extract MIDI events from notes...
-    if(queue->buffer)
-    {
-        nextEvent = 0;
-        numVoices = queue->material.NumberOfVoices();
-        
-        for(i = 0; i < numVoices; i++)
+        queue->buffer.data = new MuMIDIMessage[numEvents];
+        if(queue->buffer.data)
         {
-            numNotes = queue->material.NumberOfNotes(i);
-            for (j = 0; j < numNotes; j++)
+            // If Allocation worked, extract MIDI events from notes...
+            queue->buffer.max = numEvents;
+            nextEvent = 0;
+            numVoices = queue->material.NumberOfVoices();
+            
+            for(i = 0; i < numVoices; i++)
             {
-                note = queue->material.GetNote(i, j);
-                queue->buffer[nextEvent] = note.MIDIOn();
-                nextEvent++;
-                queue->buffer[nextEvent] = note.MIDIOff();
-                nextEvent++;
-            }
-        }
-        
-        // sort events by timestamp...
-        long n = queue->n;
-        for(j = n; j >= 1; j-- )
-        {
-            for( k = 0; k < j-1; k++ )
-            {
-                if( queue->buffer[k].time > queue->buffer[k+1].time )
+                numNotes = queue->material.NumberOfNotes(i);
+                for (j = 0; j < numNotes; j++)
                 {
-                    // swap messages...
-                    MuMIDIMessage temp;
-                    temp = queue->buffer[k];
-                    queue->buffer[k] = queue->buffer[k+1];
-                    queue->buffer[k+1] = temp;
+                    note = queue->material.GetNote(i, j);
+                    queue->buffer.data[nextEvent] = note.MIDIOn();
+                    nextEvent++;
+                    queue->buffer.data[nextEvent] = note.MIDIOff();
+                    nextEvent++;
                 }
             }
+            // After extracting notes from all voices, nextEvent contains
+            // the number of events used in the buffer (which should be
+            // the same as buffer.max, but just in case...)
+            queue->buffer.count = nextEvent;
+            
+            // sort events by timestamp...
+            long n = queue->buffer.count;
+            for(j = n; j >= 1; j-- )
+            {
+                for( k = 0; k < j-1; k++ )
+                {
+                    if( queue->buffer.data[k].time > queue->buffer.data[k+1].time )
+                    {
+                        // swap messages...
+                        MuMIDIMessage temp;
+                        temp = queue->buffer.data[k];
+                        queue->buffer.data[k] = queue->buffer.data[k+1];
+                        queue->buffer.data[k+1] = temp;
+                    }
+                }
+            }
+            queue->material.Clear();
+            queue->next = 0;
+            queue->paused = false;
+            
+            // IMPORTANT: LOADING TIME
+            // The following timestamp is registering this moment, after
+            // the event buffer has been successfully allocated and filled,
+            // to be the initial time for playback of this queue. All events
+            // in the queue will be referenced  from this point. The amount
+            // of microseconds retrieved hear will be added to the timestamp
+            // of every event so the scheduler can compare stamps and decide
+            // when to send the messages.
+            queue->loadingTime = ClockStamp();
+            //cout << "[Loading Time]: " << queue->loadingTime << endl;
+            
+            // after the queue is set to 'active' the scheduler may
+            // use it at any moment (even at interrupt time). That's
+            // why this MUST BE THE LAST ACTION!
+            queue->active = true;
+            
+            // after the queue is active we turn off the loading flag...
+            queue->loading = false;
         }
-        queue->material.Clear();
-        queue->next = 0;
-        queue->paused = false;
-        
-        // IMPORTANT: LOADING TIME
-        // The following timestamp is registering this moment, after
-        // the event buffer has been successfully allocated and filled,
-        // to be the initial time for playback of this queue. All events
-        // in the queue will be referenced  from this point. The amount
-        // of microseconds retrieved hear will be added to the timestamp
-        // of every event so the scheduler can compare stamps and decide
-        // when to send the messages.
-        queue->loadingTime = ClockStamp();
-        //cout << "[Loading Time]: " << queue->loadingTime << endl;
-        
-        // after the queue is set to 'active' the scheduler may
-        // use it at any moment (even at interrupt time). That's
-        // why this MUST BE THE LAST ACTION!
-        queue->active = true;
-        
-        // after the queue is active we turn off the loading flag...
-        queue->loading = false;
     }
     
     // after the work is done we terminate this thread...
     pthread_exit(NULL);
 }
+
+void * MuPlayer::EnqueueEvents(void* arg)
+{
+    long i, n;
+    EventQueue * queue = (EventQueue *)arg;
+    MuMIDIBuffer tempBuff = queue->buffer;
+    n = queue->buffer.count;
+    
+    // allocate memory for the note events...
+    if(n > 0)
+    {
+        // Attention! this buffer needs to be released when
+        // the scheduler is done sending its events...
+        queue->buffer.data = new MuMIDIMessage[n];
+    
+        // extract MIDI events from notes...
+        if(queue->buffer.data)
+        {
+            for(i = 0; i < n; i++)
+            {
+                queue->buffer.data[i] = tempBuff.data[i];
+            }
+            
+            queue->paused = false;
+            
+            // IMPORTANT: LOADING TIME
+            // The following timestamp is registering this moment, after
+            // the event buffer has been successfully allocated and filled,
+            // to be the initial time for playback of this queue. All events
+            // in the queue will be referenced  from this point. The amount
+            // of microseconds retrieved hear will be added to the timestamp
+            // of every event so the scheduler can compare stamps and decide
+            // when to send the messages.
+            queue->loadingTime = ClockStamp();
+            //cout << "[Loading Time]: " << queue->loadingTime << endl;
+            
+            // after the queue is set to 'active' the scheduler may
+            // use it at any moment (even at interrupt time). That's
+            // why this MUST BE THE LAST ACTION!
+            queue->active = true;
+            
+            // after the queue is active we turn off the loading flag...
+            queue->loading = false;
+        }
+    }
+    // after the work is done we terminate this thread...
+    pthread_exit(NULL);
+}
+
 
 bool MuPlayer::StartScheduler(void)
 {
@@ -370,7 +481,7 @@ bool MuPlayer::StartScheduler(void)
 // FIX FIX FIX: FINISH IMPLEMENTING THIS CAREFULLY!!
 // 1) REMEMBER TO RESET EMPTY QUEUES SO THEY CAN BE REUSED
 // 2) REMEMBER TO IMPLEMENT GLOBAL PAUSE AND STOP CORRECTLY
-// 3) Individual queue pause and stop must but planned better
+// 3) Individual queue pause and stop must be planned better
 //    for later
 void * MuPlayer::ScheduleEvents(void * pl)
 {
@@ -388,11 +499,11 @@ void * MuPlayer::ScheduleEvents(void * pl)
         {
             for(i = 0; i < MAX_QUEUES; i++)
             {
-                // if curent queue is active,...
+                // if current queue is active,...
                 if (pool[i].active == true)
                 {
                     // look for its next event...
-                    MuMIDIMessage msg = pool[i].buffer[pool[i].next];
+                    MuMIDIMessage msg = pool[i].buffer.data[pool[i].next];
                     long msgTime = (long)(msg.time * ONE_SECOND) + (pool[i].loadingTime);
                     // get current time from the system
                     long currTime = ClockStamp();
@@ -406,12 +517,13 @@ void * MuPlayer::ScheduleEvents(void * pl)
                         pool[i].next += 1;
                         // if this is the last event in the buffer,
                         // this queue needs to be reset...
-                        if(pool[i].next >= pool[i].n)
+                        if(pool[i].next >= pool[i].buffer.count)
                         {
                             // reset queue
-                            delete [] pool[i].buffer;
-                            pool[i].buffer = 0;
-                            pool[i].n = 0;
+                            delete [] pool[i].buffer.data;
+                            pool[i].buffer.data = NULL;
+                            pool[i].buffer.count = 0;
+                            pool[i].buffer.max = 0;
                             pool[i].paused = false;
                             pool[i].next = 0;
                             pool[i].queueThread = 0;
@@ -438,13 +550,24 @@ void * MuPlayer::ScheduleEvents(void * pl)
 void MuPlayer::SendMIDIMessage(MuMIDIMessage msg, MIDIPortRef outPort, MIDIEndpointRef dest)
 {
     //pthread_mutex_lock(&sendMIDIlock);
+    int byteCount;
+    Byte msgBuff[MESSAGE_LENGTH];
     
     if((outPort != 0) && (dest != 0))
     {
-        Byte msgBuff[MESSAGE_LENGTH];
         msgBuff[0] = msg.status;
         msgBuff[1] = msg.data1;
         msgBuff[2] = msg.data2;
+        
+        // If this is a program change or pitchbend message, send 2 bytes...
+        if(((msgBuff[0] & 0xF0) == 0xC0) || ((msgBuff[0] & 0xF0) == 0xE0) )
+        {
+            byteCount = 2;
+        }
+        else // for all other voice messages send three bytes...
+        {
+            byteCount = 3;
+        }
         
         MIDITimeStamp timestamp = 0.0;
         Byte buffer[1024]; // storage space for MIDI Packets
@@ -452,7 +575,7 @@ void MuPlayer::SendMIDIMessage(MuMIDIMessage msg, MIDIPortRef outPort, MIDIEndpo
         MIDIPacket * packet = MIDIPacketListInit(packetlist);
         packet = MIDIPacketListAdd( packetlist, sizeof(buffer),
                                    packet, timestamp,
-                                   MESSAGE_LENGTH, msgBuff );
+                                   byteCount, msgBuff );
         MIDISend(outPort, dest, packetlist);
     }
     

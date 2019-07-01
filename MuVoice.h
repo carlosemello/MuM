@@ -81,6 +81,7 @@ class MuVoice
     uShort	instrumentNumber;
     uShort	numOfParameters;
     string	instrumentCode;
+    string voiceName;
 	
     public:
 	
@@ -251,7 +252,7 @@ class MuVoice
 	 * MuError
 	 * <ul>
 	 * <li> MuERROR_NONE upon success
-	 * <li> MuERROR_INSUF_MEM if memoery allocation fails
+	 * <li> MuERROR_INSUF_MEM if memory allocation fails
 	 * </ul>
 	 *
 	 **/	
@@ -272,7 +273,7 @@ class MuVoice
      * MuError
      * <ul>
      * <li> MuERROR_NONE upon success
-     * <li> MuERROR_INSUF_MEM if memoery allocation fails
+     * <li> MuERROR_INSUF_MEM if memory allocation fails
      * </ul>
      *
      **/	
@@ -466,7 +467,49 @@ class MuVoice
 	 *
 	 **/
     MuError	SetInstrumentNumber(uShort inInstrNum);
-	
+    
+    /**
+     * @brief Returns an STL string containing the name of the voice
+     *
+     * @details
+     * VoiceName() returns a C++ standard library string containing
+     * the name of the voice, if one was previously assigned to it.
+     * Otherwise it returns an empty string. This property needs to
+     * be set explicitly with SetVoiceName().
+     *
+     * @note
+     * The name of the voice exists solely for labling purposes.
+     * It is not used for identification by any methods in MuM.
+     * Thus, calling code may employ it as it seems fit.
+     *
+     * @return
+     * string - voice name
+     *
+     **/
+    string	VoiceName(void);
+    
+    /**
+     * @brief Changes the name of the voice to the input string
+     *
+     * @details
+     * SetVoiceName() takes a C++ standard library string and stores
+     * it in an internal name string. After set, this name may be
+     * retrieved at any time with a all to VoiceName(). 
+     *
+     * @note
+     * This property exists solely for labling purposes. It is not
+     * used for identification by any methods in MuM. Thus, calling 
+     * code may employ it as it seems fit.
+     *
+     * param
+     * name (string) - a standard C++ string containing a name for the voice.
+     *
+     * @return
+     * MuError - returns an error if it cannot store the name string
+     *
+     **/
+    MuError	SetVoiceName(string name);
+    
 	/** 
 	 * @brief Transposes every note's pitch
 	 *
@@ -538,12 +581,44 @@ class MuVoice
      * that require explicit rests. Since MuM uses explicit start times for
      * every note, deleting these notes won't affect rhythm or performance...	 
      *
-	 * @param time (float) - index of note to be transposed
 	 *
 	 * @return
 	 * MuError
      *
 	 **/
     MuError RemoveBlankNotes(void);
+    
+    /**
+     * @brief Removes repeated pitches
+     *
+     * @details
+     *
+     * Removes every note that contains previously found pitches,
+     * so that each pitch value appears only once in the voice.
+     * notes are removed in the order they appear in voice.
+     *
+     *
+     * @return
+     * MuError
+     *
+     **/
+    MuError RemoveRepeatedPitches(void);
+    
+    
+    /**
+     * @brief Trims voice to the provided time limit
+     *
+     * @details
+     * TrimTo() scans voice looking for notes that sound beyond
+     * the limit of the provided reference 'limit'. Any notes found
+     * to meet these requirements have their duration shortened so 
+     * that they no longer prolong past that limit.
+     *
+     * @param
+     * limit (float) - time reference limit to which the voice will
+     * be trimmed
+     *
+     **/
+    MuError TrimTo(float limit);
 };
 #endif

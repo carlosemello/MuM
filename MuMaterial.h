@@ -91,6 +91,23 @@ const short FIFTH_DEGREE = 5;
 const short SIXTH_DEGREE = 6;
 const short EIGHTH_DEGREE = 7;
 
+// INTERVALS
+
+const short MINOR_SECOND = 1;
+const short MAJOR_SECOND = 2;
+const short MINOR_THIRD = 3;
+const short MAJOR_THIRD = 4;
+const short PERFECT_FOURTH = 5;
+const short AUGMENTED_FOURTH = 6;
+const short DIMINISHED_FIFTH = 6;
+const short PERFECT_FIFTH = 7;
+const short MINOR_SIXTH = 8;
+const short MAJOR_SIXTH = 9;
+const short MINOR_SEVENTH = 10;
+const short MAJOR_SEVENTH = 11;
+const short OCTAVE = 12;
+
+
 // FILE PATHS
 
 #define CSOUND_PATH "/usr/local/bin/csound "
@@ -621,6 +638,48 @@ class MuMaterial
 	 **/		
 	bool IsEmptyVoice( int voiceNumber );
 
+    /**
+     * @brief Returns an STL string containing the name of the voice
+     *
+     * @details
+     * VoiceName() returns a C++ standard library string containing
+     * the name of the voice, if one was previously assigned to it.
+     * Otherwise it returns an empty string. This property needs to
+     * be set explicitly with SetVoiceName().
+     *
+     * @note
+     * The name of the voice exists solely for labling purposes.
+     * It is not used for identification by any methods in MuM.
+     * Thus, calling code may employ it as it seems fit.
+     *
+     * @return
+     * string - voice name
+     *
+     **/
+    string	VoiceName(int voiceNumber);
+    
+    /**
+     * @brief Changes the name of the voice to the input string
+     *
+     * @details
+     * SetVoiceName() takes a C++ standard library string and stores
+     * it in an internal name string. After set, this name may be
+     * retrieved at any time with a all to VoiceName().
+     *
+     * @note
+     * This property exists solely for labling purposes. It is not
+     * used for identification by any methods in MuM. Thus, calling
+     * code may employ it as it seems fit.
+     *
+     * param
+     * name (string) - a standard C++ string containing a name for the voice.
+     *
+     * @return
+     * MuError - returns an error if it cannot store the name string
+     *
+     **/
+    void	SetVoiceName(int voiceNumber, string name);
+    
 	/**
 	 * @brief Exchanges content of two voices in this material
 	 *
@@ -779,7 +838,7 @@ class MuMaterial
      * voiceNumber (int) - voice index
      *
      * @return
-     * int - average number of notes per second
+     * float - average number of notes per second
      *
      **/
     float MelodicDensity( int voiceNumber );
@@ -871,6 +930,22 @@ class MuMaterial
 	 *
 	 **/
 	MuNote GetFirstNote( void );
+    
+    /**
+     * @brief Returns a copy of the note with owest sounding pitch
+     *
+     * @details
+     * GetLowestNoteInVoice() Returns a copy of the lowest sounding
+     * note in the requested voice. If more than one note have the exact
+     * same pitch, the last one found is returned. If material is empty,
+     * or an invalid voice is rquested, an error is issued and 
+     * GetFirstNote() returns an empty (zeroed) note.
+     *
+     * @return
+     * MuNote - requested note object
+     *
+     **/
+    MuNote GetLowestNoteInVoice( int voiceNumber );
 	
 	/**
 	 * @brief Returns a group of notes inside material object
@@ -1390,6 +1465,39 @@ class MuMaterial
 	 **/
 	void Scale(float factor);
 	
+    /**
+     * @brief Trims entire material to the provided time limit
+     *
+     * @details
+     * TrimTo() scans every voice in the material looking for notes
+     * that sound beyond the time limit provided by argument 'limit'.
+     * Any notes found to meet these requirements have their duration
+     * shortened so that they no longer prolong past that limit.
+     *
+     * @param
+     * limit (float) - time reference limit to which the material will
+     * be trimmed
+     *
+     **/
+    void TrimTo(float limit);
+    
+    /**
+     * @brief Trims requested voice to the provided total limit
+     *
+     * @details
+     * TrimTo() scans requested voice looking for notes that sound
+     * beyond the time limit provided by argument 'limit'.
+     * Any notes found to meet these requirements have their duration
+     * shortened so that they no longer prolong past that limit.     
+     *
+     * @param
+     * limit (float) - time reference limit to which the voice will
+     * be trimmed
+     *
+     **/
+
+    void TrimTo(int voiceNumber, float limit);
+
 	/**
 	 * @brief 	Shifts note durations in material
 	 *
@@ -1449,6 +1557,71 @@ class MuMaterial
      *
      **/
     void AddRestToNote(int voiceNumber, long noteNumber, float ratio = 0.25);
+    
+    /**
+     * @brief 	Turns part of every note of rquested voice into a rest
+     *
+     * @details
+     * AddRests() calls AddRestToNote() sequentially for each note in
+     * the requested voice.
+     *
+     * @param
+     * voiceNumber (int) - voice index
+     *
+     * @param
+     * ratio (float) - rest length as a percentage of the note (1.0 = 100%)
+     *
+     **/
+    void AddRests(int voiceNumber, float ratio = 0.25);
+    
+    /**
+     * @brief 	
+     * changes a note's length to a percentage of its original duration
+     *
+     * @details
+     * SetNoteLength() transforms a note's duration to the requested
+     * ratio of it's previous duration. This is can be used to sustain
+     * chords, or making piano style legato by overlaping a note's end
+     * to the next note's begining. It can also be used to decrease the
+     * note's duration to produce a shortening stacatto effect.
+     *
+     *
+     * The third argument informs what should be the new length of the note.
+     * This argument must be a percentage of the original length which
+     * corresponds to a value of 1.0. So, for example, in order to 
+     * make a note 50% longer ratio should be 1.5, to double it's length,
+     * 2.0 a so forth.
+     *
+     @note
+     * This method works on a single note within the requested voice.
+     * To make bulk changes with the same ratios use SetLengths().
+     *
+     * @param
+     * voiceNumber (int) - voice index
+     * @param
+     * noteNumber (long ) - index of the note to be modified
+     * @param
+     * ratio (float) - rest length as a percentage of the note (1.0 = 100%)
+     *
+     **/
+    void SetNoteLength(int voiceNumber, long noteNumber, float ratio);
+    
+    /**
+     * @brief
+     * changes the length of every note in requested voice
+     *
+     * @details
+     * SetLengths() calls SetNoteLength() sequentially for each note in
+     * the requested voice.
+     *
+     * @param
+     * voiceNumber (int) - voice index
+     *
+     * @param
+     * ratio (float) - length as a percentage of original duration (1.0 = 100%)
+     *
+     **/
+    void SetLengths(int voiceNumber, float ratio);
     
     // Segmentation
 	
@@ -2097,8 +2270,42 @@ class MuMaterial
 	 *
 	 **/
 	void SetAmp(int voiceNumber, float amp);
-
     
+    /**
+     *
+     * @brief
+     * sets amplitude of requested voice according to provided ratios
+     *
+     * @details
+     * This version of SetAmp() receives a block of amplitude ratios.
+     * These ratios are distributed along the entire duration of the
+     * voice. It then applies those ratios to the amplitudes of notes
+     * that correspond to the same time point within the voice.
+     *
+     * The 'ratios' in the input block must be values between 0.0 and 1.0.
+     * These values are multiplied by preexisting amplitude values within
+     * the notes. This allows shapping an amplitude curve for a phrase
+     * preserving the overall intensity. It also means that the notes in
+     * the voice must have nonzero amplitude values before applying this ,
+     * method otherwise the notes will remain silent.
+     *
+     * The number of  values in the 'ratios' block defines the resolution
+     * of the desired amplitude curve. This resolution should be estimated
+     * according to the rhythmic content of the voice being modified and 
+     * the overall duration of the voice. The ratios parameter block must
+     * be initialized and filled with the desired values before passing it
+     * to SetAmp().
+     *
+     * If voiceNumber is invalid, nothing is done.
+     *
+     * @param
+     * voiceNumber (int) - voice index
+     * @param
+     * rations (MuParamBlock) - amplitude ratios (0.0 - 1.0)
+     *
+     **/
+    void SetAmp(int voiceNumber, MuParamBlock ratios);
+
     /**
 	 *
 	 * @brief
@@ -2173,10 +2380,46 @@ class MuMaterial
      * every note, deleting these notes won't affect rhythm or performance...
      *
 	 * @param
-	 * voiceNumber (int) - voice index
+	 * voiceNumber (int) - voice index for voice to remove blank notes from
 	 *
 	 **/
     void RemoveBlankNotes(int voiceNumber);
+    
+    /**
+     *
+     * @brief
+     * removes notes with the same pitch from entire material
+     *
+     * @details
+     *
+     * This method simply calls RemoveRepeatedPitches() on each voice.
+     * See other versions of RemoveRepeatedPitches() for more details.
+     *
+     **/
+    
+    void RemoveRepeatedPitches(void);
+
+    
+    /**
+     *
+     * @brief
+     * removes notes with the same pitch from selected voice
+     *
+     * @details
+     * Removes notes with repeated pitches, leaving only one instance of
+     * each pitch in the voice. This can be used, for example, to identify
+     * pitches used in a given passage, phrase or chord. Only notes
+     * with the exact same pitch number are removed, not its octaves. So
+     * in order to achieve a complete reduction to fundamental sets of
+     * pitch classes (see Set Theory), it is necessary to call ColapsePitch()
+     * before using this method.
+     *
+     * @param
+     * voiceNumber (int) - voice index for voice to remove repeated pitches from
+     *
+     **/
+
+    void RemoveRepeatedPitches(int voiceNumber);
 
     
     // File IO

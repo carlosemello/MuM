@@ -193,3 +193,10 @@ extern long TimeToStamp(float secs)
 {
     return (long)(secs * ONE_SECOND);
 }
+
+extern int MIDIToPitchClass(int midiPitch)
+{
+    int pc = ((midiPitch % 12) + 60);
+    //cout << "[Pitch]: " << midiPitch << " [Pitch-Class]: " << pc << endl;
+    return pc;
+}

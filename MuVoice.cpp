@@ -24,6 +24,8 @@ MuVoice::MuVoice(void)
     numOfNotes = 0;
     instrumentNumber = 0;
     numOfParameters = 0;
+    instrumentCode = "";
+    voiceName = "";
 }
 
 // copy constructor
@@ -47,7 +49,8 @@ MuVoice::MuVoice(const MuVoice & inVoice)
     }
 	instrumentNumber = inVoice.instrumentNumber;
 	numOfParameters = inVoice.numOfParameters;
-
+    instrumentCode = inVoice.instrumentCode;
+    voiceName = inVoice.voiceName;
 }
 
 // destructor
@@ -80,6 +83,8 @@ MuVoice & MuVoice::operator=(const MuVoice & inVoice)
 	
 	instrumentNumber = inVoice.instrumentNumber;
 	numOfParameters = inVoice.numOfParameters;
+    instrumentCode = inVoice.instrumentCode;
+    voiceName = inVoice.voiceName;
     
     return *this;
 }
@@ -96,7 +101,9 @@ bool MuVoice::operator==(const MuVoice & inVoice)
 	if( 
 		( numOfNotes != inVoice.numOfNotes ) ||
 		( instrumentNumber != inVoice.instrumentNumber ) ||
-		( numOfParameters != inVoice.numOfParameters )
+		( numOfParameters != inVoice.numOfParameters ) ||
+        ( instrumentCode != inVoice.instrumentCode ) ||
+        ( voiceName != inVoice.voiceName )
 	   )
 		return false;
 		
@@ -140,6 +147,8 @@ void MuVoice::Clear(void)
     instrumentNumber = 0;
     numOfParameters = 0;
     noteList = NULL;
+    instrumentCode = "";
+    voiceName = "";
 }
 
 long MuVoice::NumberOfNotes(void) const
@@ -811,6 +820,18 @@ MuError	MuVoice::SetInstrumentNumber(uShort inInstrNum)
 	return err;
 }
 
+string	MuVoice::VoiceName(void)
+{
+    return voiceName;
+}
+
+MuError	MuVoice::SetVoiceName(string name)
+{
+    MuError err(MuERROR_NONE);
+    voiceName = name;
+    return err;
+}
+
 MuError MuVoice::Transpose(short interval)
 {
     short thePitch = 0;
@@ -895,31 +916,107 @@ MuError MuVoice::RemoveBlankNotes(void)
 {
     MuError err(MuERROR_NONE);
     MuNote * curr, * previous, * temp;
-    curr = previous = noteList;
-    bool noteWasDeleted = false;
+    
+    if(!noteList)
+        return MuERROR_VOICE_IS_EMPTY;
+    
+    previous = curr = noteList;
     
     while(curr)
     {
         if( (curr->Pitch() == 0) || (curr->Amp() == 0) )
         {
             temp = curr;
-            previous->SetNext(curr->Next());
-            curr = curr->Next();
+            
+            // if we are deleting the first link in the list...
+            if(curr == noteList)
+            {
+                // we need to update the list address
+                noteList = noteList->Next();
+                
+                // and the other pointers, before deleting it...
+                previous = curr = noteList;
+            }
+            else
+            {
+                previous->SetNext(curr->Next());
+                curr = curr->Next();
+            }
             delete temp;
-            noteWasDeleted = true;
             numOfNotes--;
         }
-        
-        if (noteWasDeleted == false)
+        else
         {
             previous = curr;
             curr = curr->Next();
         }
-        
-        noteWasDeleted = false;
     }
     
     return err;
 }
 
+MuError MuVoice::RemoveRepeatedPitches(void)
+{
+    MuError err(MuERROR_NONE);
+    MuNote * start, * curr, * previous;
+    
+    if (numOfNotes == 0)
+        return MuERROR_VOICE_IS_EMPTY;
+    
+    if(numOfNotes > 1)
+    {
+        start = noteList;
+        
+        while(start)
+        {
+            previous = start;
+            curr = previous->Next();
+            
+            while(curr)
+            {
+                if(start->Pitch() == curr->Pitch())
+                {
+                    previous->SetNext(curr->Next());
+                    delete curr;
+                    numOfNotes--;
+                }
+                else
+                {
+                    previous = previous->Next();
+                }
+                
+                curr = previous->Next();
+                
+            }
+            start = start->Next();
+        }
+    }
+    
+    return err;
+}
 
+MuError MuVoice::TrimTo(float limit)
+{
+    MuError err(MuERROR_NONE);
+    // if list is empty...
+    if(!noteList)
+    {
+        err.Set(MuERROR_NOTE_LIST_IS_EMPTY);
+    }
+    else // otherwise find the note...
+    {
+        MuNote * temp, * prev;
+        
+        // go through the list...
+        temp = noteList;
+        while(temp)
+        {
+            // and trim notes that are beyond
+            if(temp->End() > limit)
+                temp->SetDur(limit - temp->Start());
+            prev = temp;
+            temp = temp->Next();
+        }
+    }
+    return err;
+}

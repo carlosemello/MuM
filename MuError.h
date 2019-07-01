@@ -61,6 +61,8 @@ const short MuERROR_COULDNT_OPEN_OUTPUT_FILE = 12;
 const short MuERROR_INVALID_SCALE_DEGREE = 13;
 //!@brief Invalid note range!
 const short MuERROR_INVALID_NOTE_RANGE = 14;
+//!@brief Voice contains no data!
+const short MuERROR_VOICE_IS_EMPTY = 15;
 
 /**
 * @brief Error Class

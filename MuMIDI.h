@@ -88,7 +88,7 @@ struct MuMIDIBuffer
     //! @brief number of used/valid messages in the buffer
     long count;
 };
-typedef struct MuMIDIMessage MuMIDIMessage;
+typedef struct MuMIDIBuffer MuMIDIBuffer;
 
 //! @brief default size for MIDI message buffers
 const long DEFAULT_BUFFER_SIZE = 1024;

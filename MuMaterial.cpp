@@ -464,7 +464,6 @@ void MuMaterial::SetVoice(int voiceNum, const MuMaterial & inMaterial, int inVoi
 				lastError.Set( err );
 				return;
 			}
-            voices[voiceNum].SetInstrumentNumber(tempVoice.InstrumentNumber());
 		}
 		else
 		{	
@@ -472,6 +471,9 @@ void MuMaterial::SetVoice(int voiceNum, const MuMaterial & inMaterial, int inVoi
 			return;
 		}
 	}
+    
+    voices[voiceNum].SetInstrumentNumber(tempVoice.InstrumentNumber());
+    voices[voiceNum].SetVoiceName(tempVoice.VoiceName());
 }
 
 void MuMaterial::AddVoices( int n ) // [PUBLIC]
@@ -612,6 +614,43 @@ bool MuMaterial::IsEmptyVoice( int voiceNumber )
 		}
 	}
 	return isEmpty;
+}
+
+string	MuMaterial::VoiceName(int voiceNumber)
+{
+    lastError.Set(MuERROR_NONE);
+    string name;
+    
+    if(voices != NULL)
+    {
+        if( ( voiceNumber >= 0 ) && ( voiceNumber < numOfVoices ) )
+        {
+            name = voices[voiceNumber].VoiceName();
+        }
+        else
+            lastError.Set(MuERROR_INVALID_VOICE_NUMBER);
+    }
+    else
+        lastError.Set(MuERROR_MATERIAL_IS_EMPTY);
+    
+    return name;
+}
+
+void MuMaterial::SetVoiceName(int voiceNumber, string name)
+{
+    lastError.Set(MuERROR_NONE);
+    
+    if(voices != NULL)
+    {
+        if( ( voiceNumber >= 0 ) && ( voiceNumber < numOfVoices ) )
+        {
+            voices[voiceNumber].SetVoiceName(name);
+        }
+        else
+            lastError.Set(MuERROR_INVALID_VOICE_NUMBER);
+    }
+    else
+        lastError.Set(MuERROR_MATERIAL_IS_EMPTY);
 }
 
 void MuMaterial::SwapVoices(int oneVoice, int otherVoice) // [PUBLIC]
@@ -1013,6 +1052,59 @@ MuNote MuMaterial::GetFirstNote( void )
 		lastError.Set(MuERROR_NOTE_NOT_FOUND);
 	
 	return theNote;
+}
+
+MuNote MuMaterial::GetLowestNoteInVoice( int voiceNumber )
+{
+    lastError.Set(MuERROR_NONE);
+    MuError err;
+    MuNote theNote, currNote;
+    short lowestPitch;
+    long i;
+    if(voiceNumber < NumberOfVoices())
+    {
+        long n = voices[voiceNumber].NumberOfNotes();
+        if (n > 0)
+        {
+            err = voices[voiceNumber].GetNote( 0, &currNote );
+            if( err.Get() == MuERROR_NONE )
+            {
+                lowestPitch = currNote.Pitch();
+                theNote = currNote;
+            }
+            else
+            {
+                lastError.Set(MuERROR_NOTE_NOT_FOUND);
+                return theNote;
+            }
+            
+            for( i = 1; i < n; i++ )
+            {
+                err = voices[voiceNumber].GetNote( i, &currNote );
+                if( err.Get() == MuERROR_NONE )
+                {
+                    if(currNote.Pitch() < lowestPitch)
+                        theNote = currNote;
+                }
+                else
+                {
+                    lastError.Set(MuERROR_NOTE_NOT_FOUND);
+                    return theNote;
+                }
+                
+            }
+        }
+        else
+        {
+            lastError.Set(MuERROR_VOICE_IS_EMPTY);
+        }
+    }
+    else
+    {
+        lastError.Set(MuERROR_INVALID_VOICE_NUMBER);
+    }
+    
+    return theNote;
 }
 
 MuMaterial MuMaterial::GetNotes( int voiceNumber, long from, long through )
@@ -1859,6 +1951,30 @@ void MuMaterial::Scale(float factor)	// [PUBLIC]
 
 }
 
+void MuMaterial::TrimTo(float limit)
+{
+    lastError.Set(MuERROR_NONE);
+    int i;
+    int n = NumberOfVoices();
+    
+    for( i = 0; i < n; i++)
+        TrimTo( i, limit );
+}
+
+void MuMaterial::TrimTo(int voiceNumber, float limit)
+{
+    lastError.Set(MuERROR_NONE);
+    
+    if( voiceNumber < 0 || voiceNumber >= numOfVoices )
+    {
+        lastError.Set(MuERROR_INVALID_VOICE_NUMBER);
+        return;
+    }
+    
+    voices[voiceNumber].TrimTo(limit);
+    
+}
+
 void MuMaterial::CycleRhythm( int times)
 {
 	lastError.Set(MuERROR_NONE);
@@ -1923,7 +2039,80 @@ void MuMaterial::CycleRhythm(int voiceNumber, int times)
 
 void MuMaterial::AddRestToNote(int voiceNumber, long noteNumber, float ratio)
 {
+    lastError.Set(MuERROR_NONE);
+    MuNote note;
+    long n;
     
+    if( voiceNumber < 0 || voiceNumber >= numOfVoices )
+    {
+        lastError.Set(MuERROR_INVALID_VOICE_NUMBER);
+        return;
+    }
+    
+    n = voices[voiceNumber].NumberOfNotes();
+    if( noteNumber < 0 || noteNumber >= n )
+    {
+        lastError.Set(MuERROR_NOTE_NOT_FOUND);
+        return;
+    }
+
+    note = GetNote(voiceNumber, noteNumber);
+    note.SetDur(note.Dur() * (1 - ratio));
+    SetNote(voiceNumber, noteNumber, note);
+}
+
+void MuMaterial::AddRests(int voiceNumber, float ratio)
+{
+    lastError.Set(MuERROR_NONE);
+    if( voiceNumber < 0 || voiceNumber >= numOfVoices )
+    {
+        lastError.Set(MuERROR_INVALID_VOICE_NUMBER);
+        return;
+    }
+    
+    long i, n;
+    n = NumberOfNotes(voiceNumber);
+    for(i = 0; i < n; i++)
+        AddRestToNote(voiceNumber, i, ratio);
+}
+
+void MuMaterial::SetNoteLength(int voiceNumber, long noteNumber, float ratio)
+{
+    lastError.Set(MuERROR_NONE);
+    MuNote note;
+    long n;
+    
+    if( voiceNumber < 0 || voiceNumber >= numOfVoices )
+    {
+        lastError.Set(MuERROR_INVALID_VOICE_NUMBER);
+        return;
+    }
+    
+    n = voices[voiceNumber].NumberOfNotes();
+    if( noteNumber < 0 || noteNumber >= n )
+    {
+        lastError.Set(MuERROR_NOTE_NOT_FOUND);
+        return;
+    }
+    
+    note = GetNote(voiceNumber, noteNumber);
+    note.SetDur(note.Dur() * ratio);
+    SetNote(voiceNumber, noteNumber, note);
+}
+
+void MuMaterial::SetLengths(int voiceNumber, float ratio)
+{
+    lastError.Set(MuERROR_NONE);
+    if( voiceNumber < 0 || voiceNumber >= numOfVoices )
+    {
+        lastError.Set(MuERROR_INVALID_VOICE_NUMBER);
+        return;
+    }
+    
+    long i, n;
+    n = NumberOfNotes(voiceNumber);
+    for(i = 0; i < n; i++)
+        SetNoteLength(voiceNumber, i, ratio);
 }
 
 // Segmentation
@@ -2556,10 +2745,15 @@ void MuMaterial::SetAmp(int voiceNumber, float amp)
 {
     lastError.Set(MuERROR_NONE);
     MuNote note;
-    
-    long n = NumberOfNotes(voiceNumber);
     long i;
     
+    if( (voiceNumber < 0) || (voiceNumber >= NumberOfVoices()) )
+    {
+        lastError.Set(MuERROR_INVALID_VOICE_NUMBER);
+        return;
+    }
+    
+    long n = NumberOfNotes(voiceNumber);
     
     for(i = 0; i < n; i++)
     {
@@ -2569,14 +2763,53 @@ void MuMaterial::SetAmp(int voiceNumber, float amp)
     }
 }
 
+void MuMaterial::SetAmp(int voiceNumber, MuParamBlock ratios)
+{
+    lastError.Set(MuERROR_NONE);
+    MuNote note;
+    long i;
+    
+    if( (voiceNumber < 0) || (voiceNumber >= NumberOfVoices()) )
+    {
+        lastError.Set(MuERROR_INVALID_VOICE_NUMBER);
+        return;
+    }
+    
+    uShort numRatios = ratios.Num();
+    float voiceLength = voices[voiceNumber].Dur();
+    float voiceStart = voices[voiceNumber].Start();
+    long n = NumberOfNotes(voiceNumber);
+    
+    for(i = 0; i < n; i++)
+    {
+        note = GetNote(voiceNumber, i);
+        float noteStart = note.Start();
+        uShort ratio = (((noteStart - voiceStart) * numRatios) / voiceLength);
+        // just to make sure we are not accessing
+        // invalid array positions...
+        if(ratio < numRatios)
+        {
+            note.SetAmp(note.Amp() * ratios[ratio]);
+            SetNote(voiceNumber, i, note);
+        }
+    }
+}
+
 void MuMaterial::Crescendo(int voiceNumber, float max)
 {
     lastError.Set(MuERROR_NONE);
     MuNote note;
     float totalDur = 0;
     float increment = 0;
-    long n = NumberOfNotes(voiceNumber);
     long i;
+    
+    if( (voiceNumber < 0) || (voiceNumber >= NumberOfVoices()) )
+    {
+        lastError.Set(MuERROR_INVALID_VOICE_NUMBER);
+        return;
+    }
+
+    long n = NumberOfNotes(voiceNumber);
     
     note = GetNote(voiceNumber, (n - 1));
     totalDur = note.Start() + note.Dur();
@@ -2596,8 +2829,15 @@ void MuMaterial::Decrescendo(int voiceNumber, float max)
     MuNote note;
     float totalDur = 0;
     float increment = 0;
-    long n = NumberOfNotes(voiceNumber);
     long i;
+    
+    if( (voiceNumber < 0) || (voiceNumber >= NumberOfVoices()) )
+    {
+        lastError.Set(MuERROR_INVALID_VOICE_NUMBER);
+        return;
+    }
+    
+    long n = NumberOfNotes(voiceNumber);
     
     note = GetNote(voiceNumber, (n - 1));
     totalDur = note.Start() + note.Dur();
@@ -2770,10 +3010,38 @@ void MuMaterial::QuantizeMelodyFor(float tempo)
 void MuMaterial::RemoveBlankNotes(int voiceNumber)
 {
     lastError.Set(MuERROR_NONE);
+    MuError err;
     
     if(voiceNumber < NumberOfVoices())
     {
-        voices[voiceNumber].RemoveBlankNotes();
+        MuError err = voices[voiceNumber].RemoveBlankNotes();
+        lastError.Set(err);
+    }
+}
+
+void MuMaterial::RemoveRepeatedPitches(void)
+{
+    lastError.Set(MuERROR_NONE);
+    MuError err;
+    int i,n;
+    n = NumberOfVoices();
+    
+    for (i = 0; i < n; i++)
+    {
+        err = voices[i].RemoveRepeatedPitches();
+        lastError.Set(err);
+    }
+}
+
+void MuMaterial::RemoveRepeatedPitches(int voiceNumber)
+{
+    lastError.Set(MuERROR_NONE);
+    MuError err;
+    
+    if(voiceNumber < NumberOfVoices())
+    {
+        err = voices[voiceNumber].RemoveRepeatedPitches();
+        lastError.Set(err);
     }
 }
 
