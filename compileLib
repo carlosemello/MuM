@@ -5,15 +5,18 @@ OUTFOLDER=compiledFiles
 mkdir ${OUTFOLDER}
 cd ${OUTFOLDER}
 echo "Compilando MuUtil..."
-g++ -c ../MuUtil.cpp
+g++ -g -c ../MuUtil.cpp
 echo "Compilando MuError..."
-g++ -c ../MuError.cpp
+g++ -g -c ../MuError.cpp
 echo "Compilando MuParamBlock..."
-g++ -c ../MuParamBlock.cpp
+g++ -g -c ../MuParamBlock.cpp
 echo "Compilando MuNote..."
-g++ -c ../MuNote.cpp
+g++ -g -c ../MuNote.cpp
 echo "Compilando MuVoice..."
-g++ -c ../MuVoice.cpp
+g++ -g -c ../MuVoice.cpp
 echo "Compilando MuMaterial..."
-g++ -c ../MuMaterial.cpp
-
+g++ -g -c ../MuMaterial.cpp
+echo "Compilando MuPlayer..."
+g++ -g -c ../MuPlayer.cpp
+#echo "Compilando MuRecorder..."
+#g++ -c ../MuRecorder.cpp

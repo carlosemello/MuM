@@ -30,9 +30,17 @@ MuPlayer::MuPlayer(void)
         eqPool[i].loadingTime = 0;
     }
     // initialize MIDI objects...
+    
+#ifdef MUM_MACOSX
     midiClient = 0;
     midiOutPort = 0;
     midiDest = 0;
+#endif
+    
+#ifdef MUM_LINUX
+    // RTMidi
+    midiout = NULL;
+#endif
     
     // clear scheduler thread variable...
     schedulerThread = 0;
@@ -69,7 +77,9 @@ void MuPlayer::CleanPlaybackPool(void)
 
 bool MuPlayer::Init(void)
 {
-    long n,i;
+#ifdef MUM_MACOSX
+     long n,i;
+    
     OSStatus err = noErr;
     
     // create Client...
@@ -130,12 +140,66 @@ bool MuPlayer::Init(void)
     }
     
     return false;
+#endif
+    
+#ifdef MUM_LINUX
+    unsigned int nPorts;
+    string portName;
+    
+    // RtMidiOut constructor
+    try
+    {
+        midiout = new RtMidiOut(RtMidiOut::LINUX_ALSA, MUM_CLIENT_NAME);
+    }
+    catch( RtMidiError &error )
+    {
+        error.printMessage();
+        exit( EXIT_FAILURE );
+    }
+    
+    // Check outputs.
+    nPorts = midiout->getPortCount();
+    
+    cout << endl << "Available MIDI ports:" << endl;
+    
+    for( unsigned int i = 0; i < nPorts; i++ )
+    {
+        try
+        {
+            portName = midiout->getPortName(i);
+        }
+        catch (RtMidiError &error)
+        {
+            error.printMessage();
+        }
+        cout << "\tport " << i << ": " << portName << endl;
+    }
+    
+    selectedPort = 0;
+    
+    if(selectedPort >= 0)
+    {
+        // Connect to available port.
+        midiout->openPort( selectedPort, MUM_PORT_NAME );
+    }
+    else
+    {
+        // create a virtual port.
+        midiout->openVirtualPort(MUM_PORT_NAME);
+    }
+    
+     if(StartScheduler())
+                        return true;
 
+    return false;
+    
+#endif
 }
 
 bool MuPlayer::SelectMIDIDestination(int destNumber)
 {
-    if(destNumber > 0)
+#ifdef MUM_MACOSX
+    if(destNumber >= 0) // FIXED: was 'destNumber > 0' - check if it works...
     {
         midiDest = MIDIGetDestination(destNumber);
         if (midiDest != 0)
@@ -143,6 +207,17 @@ bool MuPlayer::SelectMIDIDestination(int destNumber)
             return true;
         }
     }
+#endif
+    
+#ifdef MUM_LINUX
+    if(destNumber >= 0)
+    {
+        midiout->closePort();
+        midiout->openPort( destNumber, MUM_PORT_NAME );
+        selectedPort = destNumber;
+        return true;
+    }
+#endif
     
     return false;
 }
@@ -150,8 +225,10 @@ bool MuPlayer::SelectMIDIDestination(int destNumber)
 string MuPlayer::ListDestinations(void)
 {
     string list;
-    long n,i;
     
+
+#ifdef MUM_MACOSX
+    long n,i;
     // Get number of destinations...
     if(midiClient != 0)
     {
@@ -177,6 +254,31 @@ string MuPlayer::ListDestinations(void)
             }
         }
     }
+#endif
+    
+#ifdef MUM_LINUX
+    
+    unsigned int nPorts;
+    string portName;
+    
+    // Check outputs.
+    nPorts = midiout->getPortCount();
+    
+    for ( unsigned int i = 0; i < nPorts; i++ )
+    {
+        try
+        {
+            portName = midiout->getPortName(i);
+        }
+        catch (RtMidiError &error)
+        {
+            error.printMessage();
+        }
+        
+        list += portName;
+    }
+
+#endif
     
     return list;
 }
@@ -194,6 +296,7 @@ void MuPlayer::Reset(void)
     CleanPlaybackPool();
     
     // Release MIDI components...
+#ifdef MUM_MACOSX
     if(midiOutPort != 0)
     {
         CFRelease(&midiOutPort);
@@ -207,6 +310,12 @@ void MuPlayer::Reset(void)
     }
     
     midiDest = 0;
+#endif
+    
+#ifdef MUM_LINUX
+    midiout->closePort();
+    delete midiout;
+#endif
 }
 
 bool MuPlayer::Play(MuMaterial & inMat, int mode)
@@ -512,7 +621,13 @@ void * MuPlayer::ScheduleEvents(void * pl)
                     if( currTime >= msgTime)
                     {
                         // schedule it to be sent to destination...
+#ifdef MUM_MACOSX
                         SendMIDIMessage(msg,player->midiOutPort, player->midiDest);
+#endif
+                        
+#ifdef MUM_LINUX
+                        SendMIDIMessage(msg,player->midiout);
+#endif
                         // advance event counter...
                         pool[i].next += 1;
                         // if this is the last event in the buffer,
@@ -547,6 +662,7 @@ void * MuPlayer::ScheduleEvents(void * pl)
     pthread_exit(NULL);
 }
 
+#ifdef MUM_MACOSX
 void MuPlayer::SendMIDIMessage(MuMIDIMessage msg, MIDIPortRef outPort, MIDIEndpointRef dest)
 {
     //pthread_mutex_lock(&sendMIDIlock);
@@ -581,7 +697,38 @@ void MuPlayer::SendMIDIMessage(MuMIDIMessage msg, MIDIPortRef outPort, MIDIEndpo
     
     //pthread_mutex_unlock(&sendMIDIlock);
 }
+#endif
 
+#ifdef MUM_LINUX
+void MuPlayer::SendMIDIMessage(MuMIDIMessage msg, RtMidiOut * midiOut)
+{
+    //pthread_mutex_lock(&sendMIDIlock);
+    int byteCount;
+    uByte msgBuff[MESSAGE_LENGTH];
+    
+    if(midiOut != NULL)
+    {
+        msgBuff[0] = msg.status;
+        msgBuff[1] = msg.data1;
+        msgBuff[2] = msg.data2;
+        
+        // If this is a program change or pitchbend message, send 2 bytes...
+        if(((msgBuff[0] & 0xF0) == 0xC0) || ((msgBuff[0] & 0xF0) == 0xE0) )
+        {
+            byteCount = 2;
+        }
+        else // for all other voice messages send three bytes...
+        {
+            byteCount = 3;
+        }
+        
+      midiOut->sendMessage( msgBuff, 3);
+    }
+    
+    //pthread_mutex_unlock(&sendMIDIlock);
+}
+
+#endif
 
 void MuPlayer::Pause(bool T_F)
 {

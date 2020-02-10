@@ -32,13 +32,27 @@
 #ifndef MU_PLAYER_H
 #define MU_PLAYER_H
 
+//#define MUM_MACOSX 1
+#define MUM_LINUX 1
+
+#ifdef MUM_MACOSX
 #include <CoreMIDI/MIDIServices.h>
+#endif
+
+#ifdef MUM_LINUX
+#include "RtMidi.h"
+#include <unistd.h>
+#endif
+
 #include <pthread.h>
 #include <iostream>
 #include <string>
+
 #include "MuMaterial.h"
 using namespace std;
 
+#define MUM_CLIENT_NAME "MuM Playback"
+#define MUM_PORT_NAME "MuM Output"
 
 //!@brief Maximum number of queues objects in the playback pool
 const int MAX_QUEUES = 10;
@@ -231,9 +245,17 @@ class MuPlayer
     private:
     
     EventQueue eqPool[MAX_QUEUES];  // Playback Pool
+    
+#ifdef MUM_MACOSX
     MIDIClientRef midiClient;       // MIDI Client (CoreMIDI)
     MIDIPortRef midiOutPort;        // OUTPUT Port (CoreMIDI)
     MIDIEndpointRef midiDest;       // Destination Endpoint (CoreMIDI)
+#endif
+
+#ifdef MUM_LINUX
+    RtMidiOut * midiout;
+    int selectedPort;
+#endif
     
     pthread_t schedulerThread;
     static pthread_mutex_t sendMIDIlock;
@@ -618,9 +640,8 @@ class MuPlayer
      * @param
      * pool (void *): pointer to the player object; as the scheduler thread
      * function is static, it needs to have access the playback pool to allow
-     * access to the event queues. This void pointer needs to be cast to
-     * (EventQueue *).
-     *
+     * access to the event queues. This void pointer should contain the 
+     * address of the player object which started the event scheduler.
      * @return
      * void *:  ScheduleEvents() terminates when the tread exits
      *
@@ -661,8 +682,13 @@ class MuPlayer
      * void
      *
      **/
+#ifdef MUM_MACOSX
     static void SendMIDIMessage(MuMIDIMessage msg, MIDIPortRef outPort, MIDIEndpointRef dest);
+#endif
     
+#ifdef MUM_LINUX
+    static void SendMIDIMessage(MuMIDIMessage msg, RtMidiOut * midiOut);
+#endif
     /**
      * @brief pauses playback for all active queues in the playback pool
      *
