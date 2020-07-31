@@ -2026,11 +2026,13 @@ void MuMaterial::CycleRhythm(int voiceNumber, int times)
 			// then change it
 			currNote.SetStart(nextSt);
 			currNote.SetDur(nextDur);
+            SetNote(voiceNumber, i,currNote);
 		}
 		
 		currNote = GetNote(voiceNumber, i);
 		currNote.SetStart(currSt);
 		currNote.SetDur(currDur);
+        SetNote(voiceNumber, i,currNote);
 	}
 	
 	// CAREFULL: PERFORMANCE ALLERT !!!
