@@ -7,6 +7,10 @@
 // it retains, in all forms, the above credits.
 //*********************************************
 
+#ifndef MuMIDI_H
+#define MuMIDI_H
+
+
 /** @file MuMIDI.h
  *
  * @brief MIDI definitions
@@ -24,8 +28,8 @@
  *
  **/
 
-#ifndef MuMIDI_H
-#define MuMIDI_H
+#define MUM_MACOSX 1
+//#define MUM_LINUX 1
 
 /**
  * @brief MIDI event structure
