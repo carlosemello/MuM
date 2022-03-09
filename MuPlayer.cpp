@@ -297,19 +297,9 @@ void MuPlayer::Reset(void)
     
     // Release MIDI components...
 #ifdef MUM_MACOSX
-    if(midiOutPort != 0)
-    {
-        CFRelease(&midiOutPort);
-        midiOutPort = 0;
-    }
-    
-    if(midiClient != 0)
-    {
-        CFRelease(&midiClient);
-        midiClient = 0;
-    }
-    
     midiDest = 0;
+    midiOutPort = 0;
+    midiClient = 0;
 #endif
     
 #ifdef MUM_LINUX
@@ -431,9 +421,6 @@ bool MuPlayer::StartQueueThread(MuMIDIBuffer events, int queueIdx)
     }
     
     // if successful...
-    return true;
-    
-    
     return true;
 }
 

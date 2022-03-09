@@ -1575,6 +1575,48 @@ class MuMaterial
     void AddRests(int voiceNumber, float ratio = 0.25);
     
     /**
+     * @brief     transforms the gaps between note starts in a melody into explicit rests
+     *
+     * @details
+     * MakeExplicitRests() transforms the gaps between note starts into notes whose
+     * frequency and amplitude are equal to zero. Rests in MuM are implicit. In other words,
+     * they are perceived when there is a time offset between the end of a note and the
+     * begining of the next. Some algorithms need to work with explicit rests, which are
+     * notes with invalid pitch and amplitude values. This method keeps track of the time
+     * passed between the end of each note and the begining of the next. When this time
+     * is greater then a certain value (minimumRestSize), it adds a note between the two
+     * original ones which has the duration of the calculated gap between them. This
+     * method only works correctly with melodic voices (no chords) which contain
+     * all notes in chronological order (default).
+     *
+     * @param
+     * voiceNumber (int) - voice index
+     *
+     * @param
+     * minRestSize (float) - the minimum gap size to be considered for conversion;
+     * spaces which are less than this value will simply be ignored.
+     *
+     **/
+    void MakeExplicitRests(int voiceNumber, float minRestSize = 0.125);
+    
+    /**
+     * @brief     trims notes that ovelap with the next
+     *
+     * @details
+     * RemoveOverlaps() trims the length of any notes whose duration overlaps the
+     * the next note's start time. The new duration for overlaping notes will be one
+     * millisecond less than the next note's start. This method only works correctly
+     * if there are only melodic notes in chronological order inside the target voice.
+     * The presence of simultaneous notes within the same voice (chords) may
+     * produce undesirable results.
+     *
+     * @param
+     * voiceNumber (int) - voice index
+     *
+     **/
+    void RemoveOverlaps(int voiceNumber);
+    
+    /**
      * @brief 	
      * changes a note's length to a percentage of its original duration
      *
@@ -2000,7 +2042,7 @@ class MuMaterial
 	 * Fills requested voice with notes from a major seventh chord  in time 0
 	 *
 	 * @details
-	 * Builds a major seventh chord  from middle C within material. All three notes start in
+	 * Builds a major seventh chord  from middle C within material. All four notes start in
      * time 0 (zero) and are assigned a length of dur.
 	 *
      * @param
@@ -2010,7 +2052,109 @@ class MuMaterial
 	 *
 	 **/
     void MajorSeventhChord(int voiceNumber, float dur);	// [PUBLIC]
+    
+    /**
+     *
+     * @brief
+     * Fills requested voice with notes from a minor seventh chord  in time 0
+     *
+     * @details
+     * Builds a minor seventh chord  from middle C within material. All four notes start in
+     * time 0 (zero) and are assigned a length of dur.
+     *
+     * @param
+     * voiceNumber (int) - voice index
+     * @param
+     * dur (float) - duration in seconds
+     *
+     **/
+    void MinorSeventhChord(int voiceNumber, float dur);    // [PUBLIC]
 	
+    /**
+     *
+     * @brief
+     * Fills requested voice with notes from a dominant seventh chord  in time 0
+     *
+     * @details
+     * Builds a dominant seventh chord  from middle C within material. All four notes start in
+     * time 0 (zero) and are assigned a length of dur.
+     *
+     * @param
+     * voiceNumber (int) - voice index
+     * @param
+     * dur (float) - duration in seconds
+     *
+     **/
+    void DominantSeventhChord(int voiceNumber, float dur);    // [PUBLIC]
+    
+    /**
+     *
+     * @brief
+     * Fills requested voice with notes from a diminished seventh chord  in time 0
+     *
+     * @details
+     * Builds a diminished seventh chord  from middle C within material. All four notes start in
+     * time 0 (zero) and are assigned a length of dur.
+     *
+     * @param
+     * voiceNumber (int) - voice index
+     * @param
+     * dur (float) - duration in seconds
+     *
+     **/
+    void DiminishedSeventhChord(int voiceNumber, float dur);    // [PUBLIC]
+    
+    /**
+     *
+     * @brief
+     * Fills requested voice with notes from a half-diminished seventh chord  in time 0
+     *
+     * @details
+     * Builds a half-diminished seventh chord  from middle C within material. All four notes start in
+     * time 0 (zero) and are assigned a length of dur.
+     *
+     * @param
+     * voiceNumber (int) - voice index
+     * @param
+     * dur (float) - duration in seconds
+     *
+     **/
+    void HalfDiminishedSeventhChord(int voiceNumber, float dur);    // [PUBLIC]
+    
+    /**
+     *
+     * @brief
+     * Fills requested voice with notes from a minor-major seventh chord  in time 0
+     *
+     * @details
+     * Builds a minor-major seventh chord  from middle C within material. All four notes start in
+     * time 0 (zero) and are assigned a length of dur.
+     *
+     * @param
+     * voiceNumber (int) - voice index
+     * @param
+     * dur (float) - duration in seconds
+     *
+     **/
+    void MinorMajorSeventhChord(int voiceNumber, float dur);    // [PUBLIC]
+    
+    /**
+     *
+     * @brief
+     * Fills requested voice with notes from a augmented-major  seventh chord  in time 0
+     *
+     * @details
+     * Builds a augmented-major seventh chord  from middle C within material. All four notes start in
+     * time 0 (zero) and are assigned a length of dur.
+     *
+     * @param
+     * voiceNumber (int) - voice index
+     * @param
+     * dur (float) - duration in seconds
+     *
+     **/
+    void AugmentedMajorSeventhChord(int voiceNumber, float dur);    // [PUBLIC]
+    
 	// Scales
 	
 	/**

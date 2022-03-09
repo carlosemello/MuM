@@ -28,6 +28,26 @@
 #ifndef MuMIDI_H
 #define MuMIDI_H
 
+
+/**
+ * @brief Platform
+ *
+ * @details
+ *
+ * These macros define MIDI platform target for the MuM Library. 
+ * They affect only the MIDI input and output facilities in the 
+ * Library, currently MuPlayer and MuRecorder classes. Only one
+ * of these defs must be active. They are used for conditional
+ * compilation of platform dependent code within the afore
+ * mentioned files. MUM_MACOSX uses with CoreAudio support
+ * for MIDI while MUM_LINUX uses RtMidi.
+ *
+ **/
+
+#define MUM_MACOSX 1
+//#define MUM_LINUX 1
+
+
 /**
  * @brief MIDI event structure
  *

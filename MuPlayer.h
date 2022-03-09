@@ -1,4 +1,4 @@
-//
+ //
 //  MuPlayer.hpp
 //  MuMRT
 //
@@ -32,8 +32,11 @@
 #ifndef MU_PLAYER_H
 #define MU_PLAYER_H
 
-//#define MUM_MACOSX 1
-#define MUM_LINUX 1
+#include <pthread.h>
+#include <iostream>
+#include <string>
+#include "MuMaterial.h"
+using namespace std;
 
 #ifdef MUM_MACOSX
 #include <CoreMIDI/MIDIServices.h>
@@ -43,13 +46,6 @@
 #include "RtMidi.h"
 #include <unistd.h>
 #endif
-
-#include <pthread.h>
-#include <iostream>
-#include <string>
-
-#include "MuMaterial.h"
-using namespace std;
 
 #define MUM_CLIENT_NAME "MuM Playback"
 #define MUM_PORT_NAME "MuM Output"
@@ -351,7 +347,7 @@ class MuPlayer
      *
      * @details
      *
-     * ListDestinations() show the avialable MIDI destinations at the time
+     * ListDestinations() shows the avialable MIDI destinations at the time
      * of the call. The numbers in the list can be used by 
      * SelectMIDIDestination() to choose a target for playback. It should
      * be noted that this information is inherently dynamic. MIDI devices
@@ -380,7 +376,7 @@ class MuPlayer
      * verification at the console or parsed into discrete units
      * for further manipulation.
      **/
-    string ListDestinations(void);
+    string  ListDestinations(void);
 
     /**
      * @brief cancels MIDI setup, stops scheduler and releases all resources for MuPlayer
@@ -689,6 +685,7 @@ class MuPlayer
 #ifdef MUM_LINUX
     static void SendMIDIMessage(MuMIDIMessage msg, RtMidiOut * midiOut);
 #endif
+    
     /**
      * @brief pauses playback for all active queues in the playback pool
      *

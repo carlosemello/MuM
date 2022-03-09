@@ -35,10 +35,21 @@
 #ifndef MuRecoder_H
 #define MuRecoder_H
 
-#include <CoreMIDI/MIDIServices.h>
+#include <vector>
+using namespace std;
+
 #include <pthread.h>
 #include "MuUtil.h"
 #include "MuMIDI.h"
+
+#ifdef MUM_MACOSX
+#include <CoreMIDI/MIDIServices.h>
+#endif
+
+#ifdef MUM_LINUX
+#include "RtMidi.h"
+#include <unistd.h>
+#endif
 
 /**
  * @class MuRecorder
@@ -46,7 +57,6 @@
  * @brief MuRecorder Class
  *
  * @details
- *
  * INTRO:
  *
  * MuRecorder is the class responsible for MIDI input in the
@@ -70,6 +80,10 @@
  * with a subsequent call to SelectMIDISource(). ResetMIDI()
  * releases all MIDI resources created by Init(). After this call,
  * the Recorder needs to be initialized again in order be usable.
+ *
+ * Linux implementation of Init() performs similar tasks as its 
+ * Mac (CoreMIDI) counterpart but using the equivalent RtMidi data
+ * structures and methods, with an underlying ALSA infrastructure.
  *
  * Once MIDI connections are in place, Init() starts a listener thread
  * which is responsible for actually receiving MIDI events. The listener
@@ -162,11 +176,9 @@
  * Currently, only PLAYBACK_MODE_NORMAL is implemented.
  *
  * @warning
+ *MIDI BUFFERS MUST BE DEALLOCATED BY CALLING CODE to avoid memory leaks.
  *
- * MIDI BUFFERS MUST BE DEALLOCATED BY CALLING CODE to avoid
- * memory leaks.
- *
- **/
+ */
 
 class MuRecorder
 {
@@ -177,10 +189,17 @@ class MuRecorder
     MuMIDIBuffer buff2;
     MuMIDIBuffer * currentBuffer; // points to one of the input buffers
     
+#ifdef MUM_MACOSX
     // MIDI CONNECTIONS...
     MIDIClientRef midiClient;       // MIDI Client (CoreMIDI)
     MIDIPortRef midiInPort;         // Input Port (CoreMIDI)
     MIDIEndpointRef midiSource;     // Source Endpoint (CoreMIDI)
+#endif
+    
+#ifdef MUM_LINUX
+    RtMidiIn * midiIn;
+    int selectedPort;
+#endif
     
     long initialStamp;
     
@@ -189,7 +208,6 @@ class MuRecorder
      * callback function
      *
      * @details
-     *
      * MuRecorder uses two alternating input buffers to store incomming MIDI
      * events. When client code requests data, the MIDI callback has to be
      * redirected to a different buffer in order to keep running smoothly
@@ -198,10 +216,7 @@ class MuRecorder
      * the next available buffer.
      *
      *
-     * @return
-     * void
-     *
-     **/
+     */
     void ToggleCurrentBuffer(void);
     
 public:
@@ -230,22 +245,38 @@ public:
      * MIDI callback function
      *
      * @details
+     * Init() is responsible for initializing the MIDI environment for the Recorder
+     * This part of the library contains some of the most platform dependent code.
+     * MuM provides implementations for two platforms which utilize a similar model
+     * for capturing MIDI information: CoreMIDI on Mac OS X and RtMidi (ALSA) on Linux.
+     * Code dependencies are handled here with conditional compilation macros.
+     * Bellow is a brief decription of MIDI initialization for each platform.
      *
-     * Init() is responsible for initializing the MIDI environment
-     * for the Recorder. The CoreMIDI implementation of this method
-     * starts out by creating a MIDI client and an associated MIDI input
-     * port, so the Library can receive MIDI events from the system.
-     * When creating the input port, Init() installs a MIDI input callback
+     * More details
+     *
+     * CoreMIDI implementation of this method starts out by creating a
+     * MIDI client  and an associated MIDI input port, so the Library
+     * can receive MIDI events from the system.
+     *
+     * RtMidi implementation allocates similar structures, except
+     * that the client already has an implict local port. So in RtMidi
+     * terms, ports refer to external MIDI entities to which the client
+     * connects, which, in CoreMIDI, correspond to MIDI Endpoints (sources
+     * or destinations).
+     *
+     * After creating the input client, Init() installs a MIDI input callback
      * which is later called by the system whenever MIDI data is available
-     * for retrieval. After that, the method requests the list of current
-     * sources to CoreMIDI and displays that list to standard output
-     * (std::cout). Init() always selects the first available source for 
+     * for retrieval. After that, the method requests the list of current MIDI
+     * sources/ports to the system and displays that list to standard output.
+     * This part of initialization is pretty much the same on both platforms.
+     *
+     * Init() always selects the first available source for
      * input, but this choice can be changed by a subsequent call to
      * SelectMIDISource(), using one of the source numbers displayed by Init().
      *
      * Normally there shouldn't be any problems with initialization, but it
      * is always safer to check the return value for this method. If Init()
-     * for any reason returns 'false', it means one or more of the CoreMIDI
+     * for any reason returns 'false', it means one or more of the CoreMIDI/RtMidi
      * calls failed, in which case the MuRecorder object should not be used.
      * Init() will also fail if it cannot allocate memory for the input buffers.
      *
@@ -264,7 +295,6 @@ public:
      * @brief Selects a source for MIDI input
      *
      * @details
-     *
      * SelectMIDISurce() takes a source number and stores it
      * for use by the player, replacing any prior selections.
      * Valid source numbers are supplied by CoreMIDI and can be
@@ -318,6 +348,7 @@ public:
      **/
     MuMIDIBuffer GetData(void);
     
+#ifdef MUM_MACOSX
     /**
      * @brief gets called by MIDI system when there is MIDI data available
      *
@@ -360,6 +391,48 @@ public:
      *
      **/
     static void MIDIInputCallback(const MIDIPacketList *list, void *procRef,void *srcRef);
+#endif
+    
+#ifdef MUM_LINUX
+    /**
+     * @brief gets called by MIDI system when there is MIDI data available
+     *
+     * @details
+     *
+     * MIDIInputCallback() is a user callback function which gets called by
+     * RtMidi whenever there is MIDI data available for reading by MuRecorder.
+     * The first argument informs the time (delta) when data has arrived.
+     * The Linux/RTMidi version of this function provides the actual MIDI data
+     * through a pointer to an an std::vector object (second argument). The final
+     * argument is a pointer to the MuRecorder object which is cast to the
+     * correct type for retrieving context information (allowing acess to the
+     * recorder's internal data and associated methods)
+     *
+     * @note
+     * 
+     * MIDIInputCallback is a static method of the MuRecorder class but should
+     * not be called by client code. This method is only called by the MIDI system.
+     *
+     * @param
+     *
+     * timeStamp (double) - a delta timestamp: when the message was received.
+     *
+     * @param
+     *
+     * message (vector<unsigned char> *) - pointer to a standard C++ vector object
+     * allocated by RtMidi to store arriving MIDI data and pass it to client code.
+     *
+     * @param
+     *
+     * userData (void *) - This is a context pointer. It contains a pointer to
+     * the MuRecorder object where the callback was registered. This is needed
+     * to access the input buffers, since the function is static and has no direct
+     * connection to the object.
+     *
+     **/
+
+    static void MIDIInputCallback(double timeStamp, vector< unsigned char > * message, void *userData);
+#endif
     
     /**
      * @brief stores a single MIDI message in the current input buffer

@@ -2026,13 +2026,11 @@ void MuMaterial::CycleRhythm(int voiceNumber, int times)
 			// then change it
 			currNote.SetStart(nextSt);
 			currNote.SetDur(nextDur);
-            SetNote(voiceNumber, i,currNote);
 		}
 		
 		currNote = GetNote(voiceNumber, i);
 		currNote.SetStart(currSt);
 		currNote.SetDur(currDur);
-        SetNote(voiceNumber, i,currNote);
 	}
 	
 	// CAREFULL: PERFORMANCE ALLERT !!!
@@ -2076,6 +2074,84 @@ void MuMaterial::AddRests(int voiceNumber, float ratio)
     n = NumberOfNotes(voiceNumber);
     for(i = 0; i < n; i++)
         AddRestToNote(voiceNumber, i, ratio);
+}
+
+void MuMaterial::MakeExplicitRests(int voiceNumber, float minRestSize)
+{
+    lastError.Set(MuERROR_NONE);
+    
+    if( voiceNumber < 0 || voiceNumber >= numOfVoices )
+    {
+        lastError.Set(MuERROR_INVALID_VOICE_NUMBER);
+        return;
+    }
+    
+    MuNote currNote, nextNote, rest;
+    float currStart, nextStart;
+    float currDur, currEnd, gap;
+    int i;
+    
+    currNote = GetNote(voiceNumber, 0);
+    rest.SetInstr(currNote.Instr());
+    rest.SetPitch(0);
+    rest.SetAmp(0);
+    
+    for( i = 0; i < (NumberOfNotes(voiceNumber) - 1); i++)
+    {
+        currNote = GetNote(voiceNumber, i);
+        currStart = currNote.Start();
+        currDur = currNote.Dur();
+        currEnd = currStart+currDur;
+        
+        nextNote = GetNote(voiceNumber, i+1);
+        nextStart = nextNote.Start();
+        gap = nextStart - currEnd;
+        
+        // if there is a gap between two consecutive notes...
+        if(gap >= minRestSize)
+        {
+            // insert a "rest note" in that spot
+            rest.SetStart(currEnd);
+            rest.SetDur(gap);
+            AddNote(rest);
+        }
+    }
+}
+
+void MuMaterial::RemoveOverlaps(int voiceNumber)
+{
+    lastError.Set(MuERROR_NONE);
+    
+    if( voiceNumber < 0 || voiceNumber >= numOfVoices )
+    {
+        lastError.Set(MuERROR_INVALID_VOICE_NUMBER);
+        return;
+    }
+    
+    MuNote currNote, nextNote;
+    float currStart, nextStart;
+    float currDur, currEnd;
+    int i;
+    
+    for( i = 0; i < (NumberOfNotes(voiceNumber) - 1); i++)
+    {
+        currNote = GetNote(voiceNumber, i);
+        currStart = currNote.Start();
+        currDur = currNote.Dur();
+        currEnd = currStart+currDur;
+        
+        nextNote = GetNote(voiceNumber, i+1);
+        nextStart = nextNote.Start();
+        
+        // if the end of current note overlaps with
+        // the start of next note...
+        if(currEnd > nextStart)
+        {
+            // we trim it by one millisecond...
+            currNote.SetDur((nextStart - currStart) - 0.001);
+            SetNote(voiceNumber, i, currNote);
+        }
+    }
 }
 
 void MuMaterial::SetNoteLength(int voiceNumber, long noteNumber, float ratio)
@@ -2537,6 +2613,121 @@ void MuMaterial::MajorSeventhChord(int voiceNumber, float dur)	// [PUBLIC]
 	AddNote(voiceNumber, note);
     note.SetPitch(71);
 	AddNote(voiceNumber, note);
+}
+
+void MuMaterial::MinorSeventhChord(int voiceNumber, float dur)
+{
+    lastError.Set(MuERROR_NONE);
+    
+    MuNote note;
+    note.SetInstr(1);
+    note.SetDur(dur);
+    note.SetAmp(1.0);
+    note.SetStart(0.0);
+    
+    note.SetPitch(60);
+    AddNote(voiceNumber, note);
+    note.SetPitch(63);
+    AddNote(voiceNumber, note);
+    note.SetPitch(67);
+    AddNote(voiceNumber, note);
+    note.SetPitch(70);
+    AddNote(voiceNumber, note);
+}
+void MuMaterial::DominantSeventhChord(int voiceNumber, float dur)
+{
+    lastError.Set(MuERROR_NONE);
+    
+    MuNote note;
+    note.SetInstr(1);
+    note.SetDur(dur);
+    note.SetAmp(1.0);
+    note.SetStart(0.0);
+    
+    note.SetPitch(60);
+    AddNote(voiceNumber, note);
+    note.SetPitch(64);
+    AddNote(voiceNumber, note);
+    note.SetPitch(67);
+    AddNote(voiceNumber, note);
+    note.SetPitch(70);
+    AddNote(voiceNumber, note);
+}
+void MuMaterial::DiminishedSeventhChord(int voiceNumber, float dur)
+{
+    lastError.Set(MuERROR_NONE);
+    
+    MuNote note;
+    note.SetInstr(1);
+    note.SetDur(dur);
+    note.SetAmp(1.0);
+    note.SetStart(0.0);
+    
+    note.SetPitch(60);
+    AddNote(voiceNumber, note);
+    note.SetPitch(63);
+    AddNote(voiceNumber, note);
+    note.SetPitch(66);
+    AddNote(voiceNumber, note);
+    note.SetPitch(69);
+    AddNote(voiceNumber, note);
+}
+void MuMaterial::HalfDiminishedSeventhChord(int voiceNumber, float dur)
+{
+    lastError.Set(MuERROR_NONE);
+    
+    MuNote note;
+    note.SetInstr(1);
+    note.SetDur(dur);
+    note.SetAmp(1.0);
+    note.SetStart(0.0);
+    
+    note.SetPitch(60);
+    AddNote(voiceNumber, note);
+    note.SetPitch(63);
+    AddNote(voiceNumber, note);
+    note.SetPitch(66);
+    AddNote(voiceNumber, note);
+    note.SetPitch(70);
+    AddNote(voiceNumber, note);
+}
+void MuMaterial::MinorMajorSeventhChord(int voiceNumber, float dur)
+{
+    lastError.Set(MuERROR_NONE);
+    
+    MuNote note;
+    note.SetInstr(1);
+    note.SetDur(dur);
+    note.SetAmp(1.0);
+    note.SetStart(0.0);
+    
+    note.SetPitch(60);
+    AddNote(voiceNumber, note);
+    note.SetPitch(63);
+    AddNote(voiceNumber, note);
+    note.SetPitch(67);
+    AddNote(voiceNumber, note);
+    note.SetPitch(71);
+    AddNote(voiceNumber, note);
+}
+void MuMaterial::AugmentedMajorSeventhChord(int voiceNumber, float dur)
+{
+    lastError.Set(MuERROR_NONE);
+    
+    MuNote note;
+    note.SetInstr(1);
+    note.SetDur(dur);
+    note.SetAmp(1.0);
+    note.SetStart(0.0);
+    
+    note.SetPitch(60);
+    AddNote(voiceNumber, note);
+    note.SetPitch(64);
+    AddNote(voiceNumber, note);
+    note.SetPitch(68);
+    AddNote(voiceNumber, note);
+    note.SetPitch(71);
+    AddNote(voiceNumber, note);
 }
 
 void MuMaterial::MajorScale(float dur, bool addOctave)	// [PUBLIC]
