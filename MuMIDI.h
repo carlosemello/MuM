@@ -15,7 +15,6 @@
  * @date 3/3/2019
  *
  * @details
- *
  * This file describes the MIDI related data structures and definitions
  * which are use throughout the MuM Library for input and output within the
  * new Realtime playback and input functionality. Some of the definitions
@@ -28,31 +27,10 @@
 #ifndef MuMIDI_H
 #define MuMIDI_H
 
-
-/**
- * @brief Platform
- *
- * @details
- *
- * These macros define MIDI platform target for the MuM Library. 
- * They affect only the MIDI input and output facilities in the 
- * Library, currently MuPlayer and MuRecorder classes. Only one
- * of these defs must be active. They are used for conditional
- * compilation of platform dependent code within the afore
- * mentioned files. MUM_MACOSX uses with CoreAudio support
- * for MIDI while MUM_LINUX uses RtMidi.
- *
- **/
-
-#define MUM_MACOSX 1
-//#define MUM_LINUX 1
-
-
 /**
  * @brief MIDI event structure
  *
  * @details
- *
  * This structure is used to describe a typical MIDI event
  * associated with a time stamp. MIDI events are ued by
  * MuM to output note-on and note-off info, for playback and
@@ -72,6 +50,24 @@ struct MuMIDIMessage
     float time;
 };
 typedef struct MuMIDIMessage MuMIDIMessage;
+
+/**
+ * @brief ShowMIDIMessage()
+ *
+ * @details
+ * This function displays the contents of a MIDI message. It takes an MUMIDIMessage structure as argument and shows it's internal fields as text through standard output (cout).
+ **/
+
+void ShowMIDIMessage(MuMIDIMessage msg);
+
+/**
+ * @brief RemoveChannel()
+ *
+ * @details
+ * This function flattens channel information from status byte of provided MIDI message. The resulting message will have the same status but allways on first MIDI channel (eg.: 95 3C 40H becomes 90 3C 40)
+ **/
+
+void RemoveChannel(MuMIDIMessage & msg);
 
 /**
  * @brief MIDI Buffer structure
