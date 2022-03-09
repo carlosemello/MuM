@@ -115,6 +115,7 @@ const short OCTAVE = 12;
 // SCORE LOADING MODES:
 const short LOAD_MODE_TIME = 0;
 const short LOAD_MODE_DIRECT = 1;
+const short LOAD_MODE_APPEND = 2;
 
 const short MIDI_BUFFER_MODE_PURGE = 0;
 const short MIDI_BUFFER_MODE_EXTEND = 1;
@@ -2589,16 +2590,19 @@ class MuMaterial
 	* the place referenced by fileName, or if by any other reason it fails to open (permissions?), 
 	* LoadScore() issues an error and terminates silently.
     *
-    * LoadScore() can operate in one of two modes, as requested by its second argument. If mode ==
-    * LOAD_MODE_TIME (the default mode) notes are added according to their start time, so they will
-    * be in crhonological order even if the score is not. If mode == LOAD_MODE_DIRECT notes are
-    * loaded in the order they appear in the score, thus they may not be necessarily in order.
-	*
-	* @param
-	* fileName (string) - path to file as a string object
-    * @param
-    * mode (short) - mode of operation. allowed values are LOAD_MODE_TIME (0)
-    * and LOAD_MODE_DIRECT (1)
+     * LoadScore() can operate in one of two modes, as requested by its second argument. If mode ==
+     * LOAD_MODE_TIME (the default mode) notes are added according to their start time, so they will
+     * be in crhonological order even if the score is not. If mode == LOAD_MODE_DIRECT notes are
+     * loaded in the order they appear in the score, thus they may not be necessarily in order. If
+     * mode == LOAD_MODE_APPEND, LoadScore() ignores the start times in the score e appends
+     * each note, in the order they are found, to the end of the material, respecting the notes' durations,
+     * so it is possible to create a melodic pattern providing only note lengths in the score.
+     *
+     * @param
+     * fileName (string) - path to file as a string object
+     * @param
+     * mode (short) - mode of operation. allowed values are LOAD_MODE_TIME (0),
+     *  LOAD_MODE_DIRECT (1), LOAD_MODE_APPEND (2)
 	*
 	**/
     void LoadScore(string fileName, short mode = LOAD_MODE_TIME);

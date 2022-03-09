@@ -3240,88 +3240,98 @@ void MuMaterial::RemoveRepeatedPitches(int voiceNumber)
 
 // File IO
 // reads a Csound score (.sco) into material object
-void MuMaterial::LoadScore(string fileName, short mode)	// [PUBLIC]
+void MuMaterial::LoadScore(string fileName, short mode)    // [PUBLIC]
 {
-	lastError.Set(MuERROR_NONE);
-	int instrNumber = 0;
-	int voiceNumber = 0;
-	char inputLine[256];
-	char tempLine[32];
-	int i, j;
-	MuNote theNote;
+    lastError.Set(MuERROR_NONE);
+    int instrNumber = 0;
+    int voiceNumber = 0;
+    char inputLine[256];
+    char tempLine[32];
+    int i, j;
+    MuNote theNote;
     stringstream tables;
     
-	// get rid of any previous data in this material
-	Clear();
-	
-	// open input file...
-	ifstream score_in(fileName.c_str());
-	if(score_in)
-	{
-		while(!score_in.eof())
-		{
-			// retrieve each line from input file
-			score_in.getline(inputLine, 256);
-			
-			// check begining of each line for valid opcodes
-			switch(inputLine[0])
-			{
-				// if function table found, store it..
-				case 'f':
+    // get rid of any previous data in this material
+    Clear();
+    
+    // open input file...
+    ifstream score_in(fileName.c_str());
+    if(score_in)
+    {
+        while(!score_in.eof())
+        {
+            // retrieve each line from input file
+            score_in.getline(inputLine, 256);
+            
+            // check begining of each line for valid opcodes
+            switch(inputLine[0])
+            {
+                // if function table found, store it..
+                case 'f':
                     tables << inputLine << endl;
                     break;
-				
-				// if note line found, ...
-				case 'i':
-					// instrument number
-					i = 1;
-					j = 0;
-					// copy parameter string
-					while((inputLine[i]) && (inputLine[i] != ' ' && inputLine[i] != '\t'))
-						tempLine[j++] = inputLine[i++];
-					tempLine[j] = '\0';					
-					instrNumber = atoi(tempLine);
-					voiceNumber = GetVoiceNumberForInstrument(instrNumber);
-					if(voiceNumber < 0)	// there is no voice with this instrument number...
-					{
-						// So we create one.
-						AddVoices(1);
-						// The new voice goes in the end of this material,
-						// so we set the last voice's instrument number to 'instrNumber',...
-						voiceNumber = (numOfVoices - 1);
-						SetInstrument( voiceNumber, instrNumber);
-						// Then we insert current note into the newly created voice...
-						theNote = CreateNoteFromCsoundLine(inputLine);
-                        
-                        if(mode == LOAD_MODE_TIME)
+                
+                // if note line found, ...
+                case 'i':
+                    // instrument number
+                    i = 1;
+                    j = 0;
+                    // copy parameter string
+                    while((inputLine[i]) && (inputLine[i] != ' ' && inputLine[i] != '\t'))
+                        tempLine[j++] = inputLine[i++];
+                    tempLine[j] = '\0';
+                    instrNumber = atoi(tempLine);
+                    voiceNumber = GetVoiceNumberForInstrument(instrNumber);
+                    if(voiceNumber < 0)    // there is no voice with this instrument number...
+                    {
+                        // So we create one.
+                        AddVoices(1);
+                        // The new voice goes in the end of this material,
+                        // so we set the last voice's instrument number to 'instrNumber',...
+                        voiceNumber = (numOfVoices - 1);
+                        SetInstrument( voiceNumber, instrNumber);
+                    }
+                    // Then we insert current note into the newly created voice...
+                    theNote = CreateNoteFromCsoundLine(inputLine);
+                    
+                    switch(mode)
+                    {
+                        case LOAD_MODE_TIME:
+                        {
                             AddNote(voiceNumber, theNote );
-                        if(mode == LOAD_MODE_DIRECT)
+                            break;
+                        }
+                            
+                        case LOAD_MODE_DIRECT:
+                        {
                             IncludeNote(voiceNumber, theNote);
-                        
-						if(lastError.Get() != MuERROR_NONE)
-							return;
-					}
-					else
-					{
-						theNote = CreateNoteFromCsoundLine(inputLine);
-                        if(mode == LOAD_MODE_TIME)
-                            AddNote(voiceNumber, theNote );
-                        if(mode == LOAD_MODE_DIRECT)
-                            IncludeNote(voiceNumber, theNote);
-					}
-					break;
-			}
-		}
+                            break;
+                        }
+                            
+                        case LOAD_MODE_APPEND:
+                        {
+                            Append(voiceNumber, theNote);
+                            break;
+                        }
+                    }
+                    
+                    if(lastError.Get() != MuERROR_NONE)
+                        return;
+                    
+                    break;
+            }
+        }
         // if tables stream is not empty...
         string temp = tables.str();
         if (temp != "") // we save the tables to material...
             SetFunctionTables(temp);
-	}
-	else
-	{
-		lastError.Set(MuERROR_COULDNT_OPEN_INPUT_FILE);
-	}
+    }
+    else
+    {
+        lastError.Set(MuERROR_COULDNT_OPEN_INPUT_FILE);
+    }
 }
+
 
 // populates the receiving material with data from a MIDI buffer...
 void MuMaterial::LoadMIDIBuffer(MuMIDIBuffer inBuffer, short mode)
