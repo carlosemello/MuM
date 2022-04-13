@@ -310,7 +310,7 @@ string MuNote::PitchName(int languageChoice, int accidentals)
 MuMIDIMessage MuNote::MIDIOn(void)
 {
 	MuMIDIMessage noteOn;
-	noteOn.status = 0x90 + ( instr - 1 );
+	noteOn.status = 0x90;
 	noteOn.data1 = pitch;
 	noteOn.data2 = amp * 127;
 	noteOn.time = start;
@@ -320,7 +320,7 @@ MuMIDIMessage MuNote::MIDIOn(void)
 MuMIDIMessage MuNote::MIDIOff(void)
 {
 	MuMIDIMessage noteOff;
-	noteOff.status = 0x80 + ( instr - 1 );
+	noteOff.status = 0x80;
 	noteOff.data1 = pitch;
 	noteOff.data2 = 0;
 	noteOff.time = ( start + dur );

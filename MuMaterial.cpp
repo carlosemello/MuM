@@ -403,6 +403,44 @@ void MuMaterial::SetInstrument(int voiceNumber, uShort instrNum)
 	
 }
 
+unsigned char MuMaterial::Channel(int voiceNumber)
+{
+    unsigned char chan = 0;
+    lastError.Set(MuERROR_NONE);
+    if(voices != NULL)
+    {
+        if( ( voiceNumber >= 0 ) && ( voiceNumber < numOfVoices ) )
+        {
+            chan = voices[voiceNumber].ChannelNumber();
+        }
+        else
+            lastError.Set(MuERROR_INVALID_VOICE_NUMBER);
+    }
+    else
+        lastError.Set(MuERROR_MATERIAL_IS_EMPTY);
+    
+    return chan;
+}
+
+void MuMaterial::SetChannel(int voiceNumber, unsigned char channelNumber)
+{
+    lastError.Set(MuERROR_NONE);
+    if(voices != NULL)
+    {
+        if( ( voiceNumber >= 0 ) && ( voiceNumber < numOfVoices ) )
+        {
+            if(channelNumber > 0 && channelNumber <= 16)
+                voices[voiceNumber].SetChannelNumber(channelNumber);
+            else
+                voices[voiceNumber].SetChannelNumber(1);
+        }
+        else
+            lastError.Set(MuERROR_INVALID_VOICE_NUMBER);
+    }
+    else
+        lastError.Set(MuERROR_MATERIAL_IS_EMPTY);
+}
+
 MuMaterial MuMaterial::GetVoice(int voiceNumber)
 {
 	lastError.Set(MuERROR_NONE);

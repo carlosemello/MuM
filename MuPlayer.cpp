@@ -428,14 +428,19 @@ void * MuPlayer::EnqueueMaterial(void* arg)
 {
     int numVoices, i;
     MuNote note;
+    
+    unsigned char channel, instrument;
     long numNotes,numEvents,nextEvent, j, k;
     EventQueue * queue = (EventQueue *)arg;
     
     // get the total number of notes in input material...
     numNotes = queue->material.NumberOfNotes();
+    numVoices = queue->material.NumberOfVoices();
     
     // each note needs two MIDI events (on/off)
-    numEvents = numNotes * 2;
+    // plus we need one extra event per voice
+    // in order to send a program change before the notes
+    numEvents = (numNotes * 2) + numVoices;
     
     // allocate memory for the note events...
     if(numEvents > 0)
@@ -448,17 +453,33 @@ void * MuPlayer::EnqueueMaterial(void* arg)
             // If Allocation worked, extract MIDI events from notes...
             queue->buffer.max = numEvents;
             nextEvent = 0;
-            numVoices = queue->material.NumberOfVoices();
             
             for(i = 0; i < numVoices; i++)
             {
+                // Send MIDI event to set the current channel to
+                // the requested GM instrument for each voice...
+                channel = queue->material.Channel(i);
+                channel--; // adjust to 0-F
+                instrument = queue->material.InstrumentNumber(i);
+                instrument--; // adjust to 0-127
+                
+                MuMIDIMessage pc; // programa change event
+                pc.status = MU_PROGRAM_CHANGE + channel;
+                pc.data1 = instrument;
+                pc.data2 = instrument;
+                pc.time = 0.0;
+                queue->buffer.data[nextEvent] = pc;
+                nextEvent++;
+                
                 numNotes = queue->material.NumberOfNotes(i);
                 for (j = 0; j < numNotes; j++)
                 {
                     note = queue->material.GetNote(i, j);
                     queue->buffer.data[nextEvent] = note.MIDIOn();
+                    queue->buffer.data[nextEvent].status += channel;
                     nextEvent++;
                     queue->buffer.data[nextEvent] = note.MIDIOff();
+                    queue->buffer.data[nextEvent].status += channel;
                     nextEvent++;
                 }
             }

@@ -23,6 +23,7 @@ MuVoice::MuVoice(void)
     noteList = NULL;
     numOfNotes = 0;
     instrumentNumber = 0;
+    channelNumber = 0;
     numOfParameters = 0;
     instrumentCode = "";
     voiceName = "";
@@ -35,6 +36,7 @@ MuVoice::MuVoice(const MuVoice & inVoice)
     noteList = NULL;
     numOfNotes = 0;
     instrumentNumber = 0;
+    channelNumber = 0;
     numOfParameters = 0;
     
     if(inVoice.noteList != NULL)
@@ -82,6 +84,7 @@ MuVoice & MuVoice::operator=(const MuVoice & inVoice)
     }
 	
 	instrumentNumber = inVoice.instrumentNumber;
+    channelNumber = inVoice.channelNumber;
 	numOfParameters = inVoice.numOfParameters;
     instrumentCode = inVoice.instrumentCode;
     voiceName = inVoice.voiceName;
@@ -101,6 +104,7 @@ bool MuVoice::operator==(const MuVoice & inVoice)
 	if( 
 		( numOfNotes != inVoice.numOfNotes ) ||
 		( instrumentNumber != inVoice.instrumentNumber ) ||
+        ( channelNumber != inVoice.channelNumber ) ||
 		( numOfParameters != inVoice.numOfParameters ) ||
         ( instrumentCode != inVoice.instrumentCode ) ||
         ( voiceName != inVoice.voiceName )
@@ -145,6 +149,7 @@ void MuVoice::Clear(void)
     }
     numOfNotes = 0;
     instrumentNumber = 0;
+    channelNumber = 0;
     numOfParameters = 0;
     noteList = NULL;
     instrumentCode = "";
@@ -793,31 +798,48 @@ uShort	MuVoice::InstrumentNumber(void)
 MuError	MuVoice::SetInstrumentNumber(uShort inInstrNum)
 {
     MuError err;
-	MuNote temp;
-	
-	if(inInstrNum > 0 && inInstrNum <= 128)
-		instrumentNumber = inInstrNum;
-	else
-		instrumentNumber = 1;
-	
-	long n = NumberOfNotes();
-	long i;
-	
-	for(i = 0; i < n; i++)
-	{
-		err = GetNote( i, &temp);
-		if(err.Get() == MuERROR_NONE)
-		{
-			temp.SetInstr( inInstrNum );
-			err = SetNote( i, temp );
-			if(err.Get() != MuERROR_NONE)
-				break;
-		}
-		else
-			break;
-	}
-	
-	return err;
+    MuNote temp;
+    
+    if(inInstrNum > 0 && inInstrNum <= 128)
+        instrumentNumber = inInstrNum;
+    else
+        instrumentNumber = 1;
+    
+    long n = NumberOfNotes();
+    long i;
+    
+    for(i = 0; i < n; i++)
+    {
+        err = GetNote( i, &temp);
+        if(err.Get() == MuERROR_NONE)
+        {
+            temp.SetInstr( inInstrNum );
+            err = SetNote( i, temp );
+            if(err.Get() != MuERROR_NONE)
+                break;
+        }
+        else
+            break;
+    }
+
+    return err;
+}
+
+unsigned char    MuVoice::ChannelNumber(void)
+{
+    return channelNumber;
+}
+
+MuError    MuVoice::SetChannelNumber(unsigned char channelNum)
+{
+    MuError err;
+    
+    if(channelNum > 0 && channelNum <= 16)
+        channelNumber = channelNum;
+    else
+        channelNumber = 1;
+    
+    return err;
 }
 
 string	MuVoice::VoiceName(void)

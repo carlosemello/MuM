@@ -79,6 +79,7 @@ class MuVoice
     MuNote *	noteList;
     long	numOfNotes;
     uShort	instrumentNumber;
+    unsigned char channelNumber;
     uShort	numOfParameters;
     string	instrumentCode;
     string voiceName;
@@ -467,6 +468,44 @@ class MuVoice
 	 *
 	 **/
     MuError	SetInstrumentNumber(uShort inInstrNum);
+    
+    /**
+     * @brief Returns the channel number definition for this voice
+     *
+     * @details
+     * ChannelNumber() returns the MIDI channel assigned to this voice;
+     * a value of 0 means no channel has been assigned to this voice yet.
+     * A voice's channel number is used to direct data to the desired MIDI
+     * channel when an MuMaterial is used in conjuntion with MuPlayer,
+     * for MIDI Realtime playback.
+     *
+     * @return
+     * uShort - instrument number
+     *
+     **/
+    unsigned char    ChannelNumber(void);
+    
+    /**
+     * @brief Sets the channel number definition for this voice
+     *
+     * @details
+     * SetChannelNumber() updates the channel number assigned to the voice.
+     * This channel number is used to inform MuPlayer which MIDI channel to
+     * direct its data to, when playing an MuMaterial through MIDI.
+     *
+     * Valid channel range for 'channelNum' is 1 through 16, to conform
+     * to the MIDI 1.0 Specification. If a channel number outside this
+     * range is provided, SetChannelNumber will default
+     * to value 1.
+     *
+     * param
+     * channelNum (uShort) - new instrument number for the voice
+     *
+     * @return
+     * MuError
+     *
+     **/
+    MuError    SetChannelNumber(unsigned char channelNum);
     
     /**
      * @brief Returns an STL string containing the name of the voice

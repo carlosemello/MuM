@@ -492,7 +492,7 @@ class MuMaterial
 	int GetVoiceNumberForInstrument(int instrNum);
     
     /**
-     * @brief Returns instrument number set for for requested voice
+     * @brief Returns instrument number previously set for requested voice
      *
      * @details
      * InstrumentNumber() Returns the internal instrument number choice for voice voiceNumber
@@ -501,7 +501,6 @@ class MuMaterial
      *
      * @param
      * voiceNumber (int) - index of voice to be queried
-     * 
      **/
     uShort InstrumentNumber(int voiceNumber);
 	
@@ -510,14 +509,14 @@ class MuMaterial
 	 *
 	 * @details
 	 * SetInstrument() Sets the internal instrument number choice for voice voiceNumber to instrument .
-	 * instrNum. If the material is empty or if voiceNumber is not a valid voice index, 	 
-     * SetInstrument() issues an error and terminates.
-     * If SetInstrument() is called on a material that contains previous notes, ALL notes will have their
-     * instrument set to the new number. Every note which gets added after this call and does not contain 
-     * an instrument definition, will have its instrument field set to the number provided by 
+	 * instrNum. If the material is empty or if voiceNumber is not a valid voice index, SetInstrument()
+     * issues an error and terminates.
+     * If SetInstrument() is called on a material that contains previous notes, ALL notes in the requested voice
+     * will have their instrument set to the new number. Every note which gets added to the voice after this call
+     * and does not contain an instrument definition, will have its instrument field set to the number provided by
      * SetInstrument(). However, new added notes which do contain an instrument choice preserve 
      * their instrument definition when added to material. Therefore, if there is a need for multiple 
-     * instruments in the same voice, it is best to issueinstrument assignments manually, that is, 
+     * instruments in the same voice, it is best to issue instrument assignments manually, that is,
      * on a note to note basis, instead of using SetInstrument().
      *
 	 * @param
@@ -525,10 +524,47 @@ class MuMaterial
 	 * @param
 	 * instrNum (int) - requested instrument number
 	 *
-	 * 
 	 **/
 	void SetInstrument(int voiceNumber, uShort instrNum);
+    
+    /**
+     * @brief Returns channel number previously set for requested voice
+     *
+     * @details
+     * Channel() Returns the internal channel number choice for voice voiceNumber.
+     * If material is empty or if voiceNumber is not a valid voice index, InstrumentNumber()
+     * issues and error and terminates.
+     *
+     * @param
+     * voiceNumber (int) - index of voice to be queried
+     *
+     **/
+    unsigned char Channel(int voiceNumber);
+    
+    /**
+     * @brief Sets channel number for requested voice
+     *
+     * @details
+     * SetChannel() Sets the internal channel number choice for voice 'voiceNumber' to channel .
+     * 'channelNumber'. If the material is empty or if voiceNumber is not a valid voice index,
+     * SetChannel() issues an error and terminates.
+     * *
+     * Channel numbers are only used by MuPlayer to direct MIDI data to the desired MIDI
+     * channel when enqueing events for playback. Therefore, MuMaterials intended to be played
+     * through MIDI (MuPlayer) should always set the desired channels for each voice before
+     * calling MuPlayerPlay(). If playback will use only Csound, there is no need to set channel
+     *  numbers, as they will be ignored.
+     *
+     * @param
+     * voiceNumber (int) - index of voice to be set
+     * @param
+     * channelNumber (int) - requested channel number
+     *
+     **/
+    void SetChannel(int voiceNumber, unsigned char channelNumber);
 	
+    
+    
 	/**
 	 * @brief Returns a copy of requested voice inside an MuMaterial object
 	 *
