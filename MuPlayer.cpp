@@ -348,6 +348,31 @@ bool MuPlayer::Play(MuMaterial & inMat, int mode)
     return true;
 }
 
+bool MuPlayer::SendProgramChange(unsigned char channel, unsigned char pc)
+{
+    MuMIDIBuffer programChange;
+    programChange.data = new MuMIDIMessage[1];
+    if(programChange.data)
+    {
+        programChange.max = 1;
+        programChange.count = 1;
+        
+        programChange.data[0].time = 0.0;
+        programChange.data[0].status = 0xC0 + channel;
+        programChange.data[0].data1 = pc;
+        programChange.data[0].data2 = pc;
+        
+        if(this->SendEvents(programChange) == false)
+            return false;
+    }
+    else
+    {
+        return false;
+    }
+    
+    return true;
+}
+
 bool MuPlayer::SendEvents(MuMIDIBuffer events)
 {
     int selectedQueue = -1;
@@ -381,6 +406,8 @@ bool MuPlayer::SendEvents(MuMIDIBuffer events)
     }
     return true;
 }
+
+
 
 bool MuPlayer::StartQueueThread(MuMaterial & inMat, int queueIdx)
 {
@@ -437,10 +464,8 @@ void * MuPlayer::EnqueueMaterial(void* arg)
     numNotes = queue->material.NumberOfNotes();
     numVoices = queue->material.NumberOfVoices();
     
-    // each note needs two MIDI events (on/off)
-    // plus we need one extra event per voice
-    // in order to send a program change before the notes
-    numEvents = (numNotes * 2) + numVoices;
+    // each note needs two MIDI events (on/off) per note
+    numEvents = numNotes * 2;
     
     // allocate memory for the note events...
     if(numEvents > 0)
@@ -456,21 +481,8 @@ void * MuPlayer::EnqueueMaterial(void* arg)
             
             for(i = 0; i < numVoices; i++)
             {
-                // Send MIDI event to set the current channel to
-                // the requested GM instrument for each voice...
                 channel = queue->material.Channel(i);
-                channel--; // adjust to 0-F
-                instrument = queue->material.InstrumentNumber(i);
-                instrument--; // adjust to 0-127
-                
-                MuMIDIMessage pc; // programa change event
-                pc.status = MU_PROGRAM_CHANGE + channel;
-                pc.data1 = instrument;
-                pc.data2 = instrument;
-                pc.time = 0.0;
-                queue->buffer.data[nextEvent] = pc;
-                nextEvent++;
-                
+                channel--; // adjust to zero-based counting
                 numNotes = queue->material.NumberOfNotes(i);
                 for (j = 0; j < numNotes; j++)
                 {
@@ -540,14 +552,14 @@ void * MuPlayer::EnqueueEvents(void* arg)
     MuMIDIBuffer tempBuff = queue->buffer;
     n = queue->buffer.count;
     
-    // allocate memory for the note events...
+    // allocate memory for the events...
     if(n > 0)
     {
         // Attention! this buffer needs to be released when
         // the scheduler is done sending its events...
         queue->buffer.data = new MuMIDIMessage[n];
     
-        // extract MIDI events from notes...
+        // copy MIDI events from input buffer...
         if(queue->buffer.data)
         {
             for(i = 0; i < n; i++)
@@ -730,7 +742,7 @@ void MuPlayer::SendMIDIMessage(MuMIDIMessage msg, RtMidiOut * midiOut)
             byteCount = 3;
         }
         
-      midiOut->sendMessage( msgBuff, 3);
+      midiOut->sendMessage( msgBuff, byteCount);
     }
     
     //pthread_mutex_unlock(&sendMIDIlock);

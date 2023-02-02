@@ -164,7 +164,7 @@ bool MuMaterial::operator==( const MuMaterial & inMaterial)
 }
 
 // Inequality test...
-bool MuMaterial::operator!=(const MuMaterial & inMaterial) 
+bool MuMaterial::operator!=(const MuMaterial & inMaterial)
 {
     return !( *this == inMaterial );
 }

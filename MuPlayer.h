@@ -500,6 +500,29 @@ class MuPlayer
     bool SendEvents(MuMIDIBuffer events);
     
     /**
+     * @brief sends a program change (MIDI instrument (GM) request) to the
+     * desired MIDI channel.
+     *
+     * @details
+     *
+     * SendProgramChange() calls SendEvents() (above), with a single MIDI
+     * event, which is a Program Change event to the requested MIDI channel.
+     * In order to do that, this method allocates a buffer which should be released
+     * by SendEvents().
+     *
+     * @param
+     *
+     * channel (int) - MIDI channel (0-15) to send event to;
+     * pc (int) - Program Change (0 - 127) to be sent;
+     *
+     * @return
+     *
+     * bool - SendProgramChange() returns false if either the MID buffer
+     * allocation or the call to SendEvents() fail.
+     **/
+    bool SendProgramChange(unsigned char channel, unsigned char pc);
+    
+    /**
      * @brief starts an event queue working thread to playback notes
      *
      * @details
