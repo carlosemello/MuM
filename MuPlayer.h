@@ -50,7 +50,7 @@ using namespace std;
 #define MUM_CLIENT_NAME "MuM Playback"
 #define MUM_PORT_NAME "MuM Output"
 
-//!@brief Maximum number of queues objects in the playback pool
+//!@brief Maximum number of queue objects in the playback pool
 const int MAX_QUEUES = 10;
 
 //!@brief Normal Playback Mode: imediate playback of scheduled materials
@@ -109,7 +109,7 @@ typedef struct EventQueue EventQueue;
  * INTRO:
  *
  * MuPlayer is the only class in the MuM Library realtime
- * playback module. Playback is currently done with MIDI and
+ * playback module. Playback is  done with MIDI and
  * can be directed to any enabled MIDI destinations in the system.
  * Normally only a single Player object is needed to play various
  * materials within the lifetime of a MuM based application.
@@ -125,10 +125,14 @@ typedef struct EventQueue EventQueue;
  * heard. However this call is synchronous and it starts
  * a system level process which will play the entire length
  * of the material before returning control to the Library.
+ * MIDI playback with MuPlayer,on the other hand, can
+ * be used at any time during without blocking an application
+ * execution flow.
  *
  * @note
- * currently only normal playback mode is implemented (check the
- * MuM Library page on GitHub frequently for new functionality).
+ * currently only normal playback mode is implemented
+ * Game Mode is TBD. (check the MuM Library
+ * page on GitHub frequently for new functionality).
  *
  * INITIALIZATION:
  *
@@ -136,7 +140,7 @@ typedef struct EventQueue EventQueue;
  * initialized. This initialization creates the necessary
  * infrastructure for the player to interact with the MIDI
  * system in the current platform. Initialization is done
- * with a call to Init(). When using CoreMIDI, Init()
+ * with a call to Init(). When using CoreMIDI (Mac OS), Init()
  * creates a MIDI client and an output port associated with
  * it. It also verifies the available MIDI destinations at the
  * moment of the call and displays a list of destinations in
@@ -147,8 +151,10 @@ typedef struct EventQueue EventQueue;
  * sending the MIDI events. ResetMIDI() releases all MIDI
  * resources created by Init(). After this call, the Player
  * needs to be initialized again in order be usable.
- *
- * USING PLAYERS:
+ * Linux implementation behaves ina similar manner
+ * but using RtMIDI (ALSA). To opt between Mac/Linux
+ * compilation, there is a macro definition in MIDI.h.
+ * Currently there is no Windows implementation of MuPlayer.
  *
  * Once initialized, the player can receive requests
  * to play musical materials with calls to Play(). This method
@@ -175,7 +181,7 @@ typedef struct EventQueue EventQueue;
  * extracting MIDI events, put them in chronological order inside a
  * MIDI event queue and flag the queue as active. The scheduler, on
  * the other hand, starts when the player is initialized and keeps 
- * looking for active queues in the pool. For every active queue it finds
+ * looking for active queues in the pool. For every active queue, it finds
  * the next pending event and checks its timestamp. If it is expired the
  * scheduler sends it. Then it moves to the next active queue and so on,
  * until the applications terminates or the player is paused, stopped or
@@ -184,12 +190,12 @@ typedef struct EventQueue EventQueue;
  * by the player.
  *
  * The player comunicates to its threads through one-way flags.
- * For example, only the queue thread can set the active flag and it only
+ * Only the working queue thread can set the active flag and it only
  * does that once, when the event queue is filled up. After that the 
  * working queue thread will terminate. Only the scheduler thread
  * will read this flag and turn it off when the event queue is completely
  * empty. Only the player will look for inactive queue so it can 
- * play another material. Similarly, the playback controls are
+ * play another material. The playback controls are
  * implemented using this same type of mechanism. Each queue has a
  * pause flag which can only be set by the player and read by the
  * scheduler thread. When the scheduler detects an acitve queue,
@@ -198,10 +204,19 @@ typedef struct EventQueue EventQueue;
  * if the entire player is paused, the scheduler ignores all queues
  * and just idles for a few microseconds before checking again.
  *
- * SAMPLE:
+ * USAGE:
  *
- * Normal workflow for playback with MuM can be summarized by the following
- * piece of code:
+ * When using MuPlayer for playback with MuM, it is necessary
+ * to define a MIDI channel for each voice to be played, which can
+ * be done with SetChannel(). Once the channel is set, instrument
+ * choices can be made with a call to SendProgramChange()
+ * to each individual channel, before calling  Play(). This
+ * assumes  the synthesizer on the other side of the MIDI
+ * setup understands GM requests. Any other required messages
+ * during MIDI playback can be delivered by SendMIDIEvents().
+ *
+ * Normal workflow for playback with MuM can be summarized by
+ * the following code sample:
  *
  * @code {.cpp}
  *
@@ -210,10 +225,9 @@ typedef struct EventQueue EventQueue;
  * //...
  * MuMaterial mat;
  * mat.MajorScale(0.5);
+ * mat.SetChannel(0,1);
+ * player.SendProgramChange(0,72); // flute (GM)
  * player.Play(mat, PLAYBACK_MODE_NORMAL);
- * // ...
- * mat.Transpose(-5);
- * player.Play(mat,PLAYBACK_MODE_NORMAL);
  * //...
  * player.Pause(true); // pause playback
  * //...
@@ -306,11 +320,12 @@ class MuPlayer
      * the list to standard output (std::cout). Init() always selects the
      * first available destination for playback, but this choice can be
      * changed by a subsequent call to SelectMIDIDestination(), using one
-     * of the destination numbers displayed by Init().
+     * of the destination numbers displayed by Init(). When using RTMidi
+     * Init() will check for available MIDI ports for playback in a similar way.
      *
      * Normally there shouldn't be any problems with initialization, but it
      * is always safer to check the return value for this method. If Init()
-     * for any reason returns 'false', it means one or more of the CoreMIDI
+     * for any reason returns 'false', it means one or more CoreMIDI/RTMidi
      * calls failed, in which case the MuPlayer object should not be used.
      * Init() may also return false if for some reason it cannot start the
      * scheduler thread.
@@ -329,7 +344,7 @@ class MuPlayer
      *
      * SelectMIDIDestination() takes a destination number and stores it
      * for use by the player, replacing any prior selections.
-     * Valid destination numbers are supplied by CoreMIDI and can be
+     * Valid destination numbers are supplied by CoreMIDI /RTMidiand can be
      * verified with a call to DisplayDestinations() or by checking
      * Init()'s console output.
      *
@@ -379,12 +394,13 @@ class MuPlayer
     string  ListDestinations(void);
 
     /**
-     * @brief cancels MIDI setup, stops scheduler and releases all resources for MuPlayer
+     * @brief cancels MIDI setup, stops scheduler and releases all resources
+     * used by MuPlayer
      *
      * @details
      *
      * Reset() releases all resources created by Init()
-     * and zeroes all the internal variables associated with them.
+     * and zeroes all  internal variables associated with them.
      * It also stops the scheduler thread and throws away any active
      * queues. Reset() effectively puts MuPlayer back at its original
      * uninitialized state. After a call to ResetMIDI(), an MuPlayer 
@@ -425,7 +441,7 @@ class MuPlayer
      *
      * @code {.cpp}
      *
-     * const int MAX_QUEUES = 100;
+     * const int MAX_QUEUES = 10;
      *
      * @endcode
      *
@@ -434,13 +450,13 @@ class MuPlayer
      *
      * @param
      * mode (int) - playback mode to be used
-     *              (currently, only PLAYBACK_MODE_NORMAL is implemented)
+     * (currently, only PLAYBACK_MODE_NORMAL is implemented)
      *
      * @return
      *
      * bool - Play() returns false if (a) it couldn't find an idle event
-     * queue in the pool or (b) the call to StartQueueThread() fails 
-     * (see  StartQueueThread() for details), otherwise it returns true.
+     * queue in the pool or (b) the call to StartQueueThread() fails,
+     *  otherwise it returns true (see  StartQueueThread() for details).
      *
      **/
     bool Play(MuMaterial & inMat, int mode);
@@ -474,7 +490,7 @@ class MuPlayer
      *
      * @code {.cpp}
      *
-     * const int MAX_QUEUES = 100;
+     * const int MAX_QUEUES = 10;
      *
      * @endcode
      *
@@ -505,7 +521,7 @@ class MuPlayer
      *
      * @details
      *
-     * SendProgramChange() calls SendEvents() (above), with a single MIDI
+     * SendProgramChange() calls SendEvents(), with a single MIDI
      * event, which is a Program Change event to the requested MIDI channel.
      * In order to do that, this method allocates a buffer which should be released
      * by SendEvents().
@@ -589,7 +605,7 @@ class MuPlayer
      *
      * @param
      * arg (void*) - this argument should receive the address of
-     * the event queue this working thread will operating on.
+     * the event queue this working thread will be operating on.
      *
      * @return
      * void *:  EnqueueMaterial() terminates when the tread exits
@@ -630,7 +646,7 @@ class MuPlayer
      * StartScheduler() initiates the MIDI event scheduling thread
      * within an MuPlayer. Once successfully started, the scheduler
      * will keep looking for pending events on every active queue
-     * untill it is stopped or paused, or the Player is destroyed.
+     * untill it is stopped or paused, or the Player is reset/destroyed.
      *
      * @return
      * bool: StartScheduler() returns false if it cannot start
@@ -672,7 +688,7 @@ class MuPlayer
      *
      * @details
      *
-     * SendMIDIMessage() is called by ScheduleEvents()to deliver
+     * SendMIDIMessage() is called by ScheduleEvents() to deliver
      * a single MIDI message at a time to its destination.
      * The time stamp within 'msg' is always ignored.
      * SendMIDIMessage() always delivers every message immediately.
@@ -684,6 +700,7 @@ class MuPlayer
      * meant to be called by MuPlayer internal code running on another
      * thread.
      *
+     * Mac OS:
      *
      * @param
      * msg (MuMIDIMessage) - MIDI event to be delivered
@@ -696,6 +713,15 @@ class MuPlayer
      * dest (MIDIEndpointRef) - Destination Endpoint selected by the
      * Playback Manager from the lst of available destinations in the
      * MIDI system (CoreMIDI)
+     *
+     * Linux:
+     *
+     * @param
+     * msg (MuMIDIMessage) - MIDI event to be delivered
+     *
+     * @param
+     * midiOut (RtMidiOut *) - output port (RtMidi)
+     *
      *
      * @return
      * void
@@ -737,7 +763,7 @@ class MuPlayer
      * Stop() can be used to stop playback. When Stop() is called,
      * all event queues are deactivated. It is not possible to resume
      * previously scheduled playback once the Player issues a
-     * stop command. it is possible, however to make new requests, as
+     * stop command. It is possible, however to make new requests, as
      * long as the player is not Reset().
      *
      * @return

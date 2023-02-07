@@ -102,7 +102,7 @@ MuMaterial::MuMaterial( const MuMaterial & inMaterial, int fromVoice )
 // Operators
 
 // Assignment
-MuMaterial & MuMaterial::operator=(const MuMaterial & inMaterial)		// [PUBLIC]
+MuMaterial & MuMaterial::operator=(const MuMaterial & inMaterial)// [PUBLIC]
 {
     int i;
 	lastError.Set(MuERROR_NONE);

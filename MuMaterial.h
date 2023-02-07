@@ -552,8 +552,8 @@ class MuMaterial
      * Channel numbers are only used by MuPlayer to direct MIDI data to the desired MIDI
      * channel when enqueing events for playback. Therefore, MuMaterials intended to be played
      * through MIDI (MuPlayer) should always set the desired channels for each voice before
-     * calling MuPlayerPlay(). If playback will use only Csound, there is no need to set channel
-     *  numbers, as they will be ignored.
+     * calling MuPlayer::Play(). If playback will use only Csound, there is no need to set channel
+     * numbers, as they will be ignored.
      *
      * @param
      * voiceNumber (int) - index of voice to be set
