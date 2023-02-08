@@ -34,16 +34,16 @@
  organization. Thus, the framework is not particularly useful for music which is centered 
  on continuous transformation of sound. The framework is built with standard (ANSI) 
  C++. Therefore it is easily portable to various platforms in source code form. Its output 
- may consist of either Csound score files or Standard MIDI Files. 
+ may consist of either Csound score files or Real Time MIDI data.
  
  MuM is free software. It may be copied, modified and reused in any way, as long as it 
  retains the credits for the original developers (as noted in this document and in source 
  code) in the derived work's source and documentation files. The original MuM 
  implementation was writen by Carlos Eduardo Mello, at the University of Brasilia. 
  
-* @version 1.0.4
+* @version 1.0.6
 * @author Carlos Eduardo Mello
-* @date 16/7/2016
+* @date 2/8/2023
 **/
  
 #ifndef _MU_MATERIAL_H_

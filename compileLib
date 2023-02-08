@@ -1,22 +1,22 @@
 # =====================
-# Compilar MuM
+# Compile MuM Classes
 # =====================
-OUTFOLDER=compiledFiles
-mkdir ${OUTFOLDER}
-cd ${OUTFOLDER}
-echo "Compilando MuUtil..."
+LIBFOLDER=compiledFiles
+mkdir ${LIBFOLDER}
+cd ${LIBFOLDER}
+echo "Compiling MuUtil..."
 g++ -g -c ../MuUtil.cpp
-echo "Compilando MuError..."
+echo "Compiling MuError..."
 g++ -g -c ../MuError.cpp
-echo "Compilando MuParamBlock..."
+echo "Compiling MuParamBlock..."
 g++ -g -c ../MuParamBlock.cpp
-echo "Compilando MuNote..."
+echo "Compiling MuNote..."
 g++ -g -c ../MuNote.cpp
-echo "Compilando MuVoice..."
+echo "Compiling MuVoice..."
 g++ -g -c ../MuVoice.cpp
-echo "Compilando MuMaterial..."
+echo "Compiling MuMaterial..."
 g++ -g -c ../MuMaterial.cpp
-echo "Compilando MuPlayer..."
+echo "Compiling MuPlayer..."
 g++ -g -c ../MuPlayer.cpp
-#echo "Compilando MuRecorder..."
-#g++ -c ../MuRecorder.cpp
+echo "Compiling MuRecorder..."
+g++ -c ../MuRecorder.cpp

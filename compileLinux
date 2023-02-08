@@ -1,6 +1,10 @@
+#change this to the name of file containing main() function...
 MAIN=main
-OUTFOLDER=compiledFiles
-echo "Compilando Main..."
-g++ -g -D__LINUX_ALSA__ -o TestMuMRt ${MAIN}.cpp ${OUTFOLDER}/MuUtil.o ${OUTFOLDER}/MuError.o ${OUTFOLDER}/MuParamBlock.o ${OUTFOLDER}/MuNote.o ${OUTFOLDER}/MuVoice.o ${OUTFOLDER}/MuMaterial.o ${OUTFOLDER}/MuPlayer.o RtMidi.cpp -lasound -lpthread 
-echo "Alterando permissoes do arquivo executavel..."
-chmod 755 ${MAIN}
+#change this to the desired name for executable file...
+OUTFILE=MuMTest
+#this should be the name of the directory containing previously compiled library files
+LIBFOLDER=compiledFiles
+echo "Compiling Main..."
+g++ -g -D__LINUX_ALSA__ -o ${OUTFILE} ${MAIN}.cpp ${LIBFOLDER}/MuUtil.o ${LIBFOLDER}/MuError.o ${LIBFOLDER}/MuParamBlock.o ${LIBFOLDER}/MuNote.o ${LIBFOLDER}/MuVoice.o ${LIBFOLDER}/MuMaterial.o ${LIBFOLDER}/MuPlayer.o RtMidi.cpp -lasound -lpthread
+echo "Changing executable file permissions..."
+chmod 755 ${OUTFILE}
