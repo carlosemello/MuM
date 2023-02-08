@@ -41,7 +41,7 @@
  code) in the derived work's source and documentation files. The original MuM 
  implementation was writen by Carlos Eduardo Mello, at the University of Brasilia. 
  
-* @version 1.0.6
+* @version 1.0.7
 * @author Carlos Eduardo Mello
 * @date 2/8/2023
 **/
