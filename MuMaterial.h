@@ -107,6 +107,9 @@ const short MINOR_SEVENTH = 10;
 const short MAJOR_SEVENTH = 11;
 const short OCTAVE = 12;
 
+// SHOW OPTIONS
+const bool HIDE_FUNCTION_TABLES = false;
+const bool SHOW_FUNCTION_TABLES = true;
 
 // FILE PATHS
 
@@ -1241,29 +1244,28 @@ class MuMaterial
 	 * @brief Transposes entire material by degree
 	 *
 	 * @details
-	 * DiatonicTranspose() transposes entire material by degree, that is respecting 
-	 * the intervals found in the key signature. User code provides a key 
-	 * (MIDI note number) and mode (MAJOR_MODE or MINOR_MODE). DiatonicTranspose() 
-	 * translates each note in material to scale degrees. Degrees are then transposed 
-     * based on the "degree  distance" between the lowest note of material and the 
-     * requested degree of transposition. Direction of transposition
-     * can be set with the 'direction' argument (possible values bellow).
+	 * DiatonicTranspose() transposes entire material by degree, that is, respecting
+	 * the accidentals found in the key signature. User code provides a key
+	 * (constants above: C_NAT == 0, C_SHARP == 1, ...) and mode (MAJOR_MODE or MINOR_MODE).
+	 * DiatonicTranspose()  translates each note in material to scale degrees. Degrees are then transposed
+     * based on the "degree  distance" requested by calling code
+     *  Direction of transposition can be set with the 'direction' argument (possible values bellow).
      * If any notes within material do not belong to the requested key/mode, 
-     * DiatonicTranspose() issues an error and returns. This may happen at any point
-     * along the transposition process, therefore it is advisable to allways check
-     * the materials last error, before proceding after using DiatonicTranspose().
+     * DiatonicTranspose() returns leaving original material untouched, and
+     *  sets last error to MuERROR_INVALID_SCALE_DEGREE. It is advisable to allways check
+     * the materials last error, before proceding, after using DiatonicTranspose().
      *
 	 * @param
-	 * key (short) - key center (a MIDI pitch number)
+	 * key (short) - key center (C_NAT = 0, C_SHARP = 1, D_FLAT = 1, D_NAT = 2, ...)
 	 * @param
-	 * mode (short) - major or minor
+	 * mode (short) - MAJOR_MODE or MINOR_MODE
 	 * @param
-	 * degree (short) - target scale degree (degree to transpose to)
+	 * degreeDistance (short) - interval of transposition in number of degrees
 	 * @param
 	 * direction (short) - ASCENDING or DESCENDING
 	 *
 	 **/	
-	void DiatonicTranspose( short key, short mode, short degree, short direction );
+	void DiatonicTranspose( short key, short mode, short degreeDistance, short direction );
  	
 	
 	// Pitch Class
@@ -1300,7 +1302,7 @@ class MuMaterial
 	 * @brief Moves entire material to the desired point in time 
 	 *
 	 * @details
-	 * Move() Moves entire material to the requested point in time. timePosition will 
+	 * Move() Moves entire material to the requested point in time. Time position will 
 	 * be the start time of the first note in material. Remaining notes will be moved 
 	 * acoordingly, in order to maintain the same original distance with each other. 
 	 * If material is empty, an error is issued and Move() terminates.
@@ -2766,11 +2768,14 @@ class MuMaterial
 	 *
 	 * i1  0.0  2.5  7.00  0.5 
 	 *
+     * @param
+     * ftables (bool) - SHOW_FUNCTION_TABLES / HIDE_FUNCTION_TABLES
+     •
 	 * @return
 	 * standard C++ string object containing the entire csound score
 	 *
 	 **/
-    string Score(void);
+    string Score(bool ftables = SHOW_FUNCTION_TABLES);
     
     /**
      * @brief
@@ -2913,12 +2918,15 @@ class MuMaterial
 	/**
 	 * @brief
 	 * Sends description of material to standard output
-	 * 
+     *
 	 * @details
 	 * Displays information to screen describing material for debugging purposes;    
 	 *
+     * @param
+	 * ftables (bool) - SHOW_FUNCTION_TABLES / HIDE_FUNCTION_TABLES
+     *
 	 **/			
-	void Show( void );
+	void Show( bool ftables = SHOW_FUNCTION_TABLES );
 	
 	// Csound
 	

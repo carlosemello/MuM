@@ -102,7 +102,7 @@ MuMaterial::MuMaterial( const MuMaterial & inMaterial, int fromVoice )
 // Operators
 
 // Assignment
-MuMaterial & MuMaterial::operator=(const MuMaterial & inMaterial)// [PUBLIC]
+MuMaterial & MuMaterial::operator=(const MuMaterial & inMaterial)   		// [PUBLIC]
 {
     int i;
 	lastError.Set(MuERROR_NONE);
@@ -146,7 +146,7 @@ MuMaterial & MuMaterial::operator=(const MuMaterial & inMaterial)// [PUBLIC]
 
 // Tests two materials for equality
 // obs.: function tables are not considered for equality
-bool MuMaterial::operator==( const MuMaterial & inMaterial)
+bool MuMaterial::operator==( const MuMaterial & inMaterial) 		// [PUBLIC]
 {
 	int i, n;
 	
@@ -199,7 +199,7 @@ MuMaterial  MuMaterial::operator+(const MuMaterial & inMaterial)		// [PUBLIC]
 	return temp;
 }
 
- MuMaterial & MuMaterial::operator+=( const MuMaterial & inMaterial )
+ MuMaterial & MuMaterial::operator+=( const MuMaterial & inMaterial )   		// [PUBLIC]
 {
     MuError err(MuERROR_NONE);
     lastError.Set(MuERROR_NONE);
@@ -228,7 +228,7 @@ MuMaterial  MuMaterial::operator+(const MuMaterial & inMaterial)		// [PUBLIC]
     return *this;
 }
 
- MuMaterial & MuMaterial::operator+=( const MuNote & inNote )
+ MuMaterial & MuMaterial::operator+=( const MuNote & inNote )   		// [PUBLIC]
 {
     MuNote temp = inNote;
     
@@ -1513,10 +1513,10 @@ void MuMaterial::Transpose(int voiceNumber, long startingNote, long endingNote, 
 // ARGUMENTS:  ==================================
 // key ? { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 }
 // mode ? { MAJOR_MODE, MINOR_MODE }
-// degree ? { 1, 2, 3, 4, 5, 6, 7 }
+// degreeDistance ? { how many degrees to move }
 // direction ? { ASCENDING, DESCENDING }
 // ==============================================
-void MuMaterial::DiatonicTranspose( short key, short mode, short targetDegree, short direction )
+void MuMaterial::DiatonicTranspose( short key, short mode, short degreeDistance, short direction )
 {	
 	MuError err( MuERROR_NONE );
 	lastError.Set( MuERROR_NONE );
@@ -1528,8 +1528,7 @@ void MuMaterial::DiatonicTranspose( short key, short mode, short targetDegree, s
     int v,i;
     MuMaterial tempMat;
 	MuNote tempNote;
-	short pitch;
-	short sourceDegree, currDegree, degreeChange;
+	short currDegree;
 	
 	switch (mode) 
 	{
@@ -1548,16 +1547,8 @@ void MuMaterial::DiatonicTranspose( short key, short mode, short targetDegree, s
 		for( k = 0; k < NUM_OF_SCALE_DEGREES; k++ )
 			scale[ i + k ] = j + modePattern[ k ] + key;
 	}
-	
-	targetDegree--;
+    
     tempMat = *this;
-    tempMat.Sort(SORT_FIELD_PITCH);
-	tempNote = tempMat.GetFirstNote();
-	pitch = tempNote.Pitch();
-	sourceDegree = Inside( pitch, scale, FULL_SCALE_SIZE );
-	sourceDegree %= NUM_OF_SCALE_DEGREES;
-	degreeChange = targetDegree - sourceDegree;
-	degreeChange *= direction;
 	
 	v = numOfVoices;
 	for( i = 0; i < v; i++ )
@@ -1565,7 +1556,7 @@ void MuMaterial::DiatonicTranspose( short key, short mode, short targetDegree, s
 		n = NumberOfNotes( i );
 		for( j = 0; j < n; j++ )
 		{
-			tempNote = GetNote( i, j );
+			tempNote = tempMat.GetNote( i, j );
 			if( lastError.Get() == MuERROR_NONE )
 			{
 				currDegree = Inside(tempNote.Pitch(), scale, FULL_SCALE_SIZE );
@@ -1576,12 +1567,14 @@ void MuMaterial::DiatonicTranspose( short key, short mode, short targetDegree, s
                     lastError = MuERROR_INVALID_SCALE_DEGREE;
                     return;
                 }
-				currDegree += degreeChange;
+				currDegree += degreeDistance * direction;
 				tempNote.SetPitch( scale[ currDegree ] );
-				SetNote( i, j, tempNote );
+				tempMat.SetNote( i, j, tempNote );
 			}
 		}
 	}
+    if(tempMat.LastError().Get() == MuERROR_NONE)
+        *this = tempMat;
 }
 
 void MuMaterial::ColapsePitch(void)
@@ -3621,26 +3614,28 @@ void MuMaterial::Orchestra(string fileName)	// [PUBLIC]
 }
 
 
-string MuMaterial::Score(void)
+string MuMaterial::Score(bool ftables)
 {
     lastError.Set(MuERROR_NONE);
     MuError err(MuERROR_NONE);
     stringstream score;
-    string ftables = FunctionTables();
     
-    if(ftables == "")
+    if(ftables)
     {
-        SetDefaultFunctionTables();
-        ftables = FunctionTables();
+        string functionTables = FunctionTables();
+        if(functionTables == "")
+        {
+            SetDefaultFunctionTables();
+            functionTables = FunctionTables();
+        }
+        
+        // Write Function Tables...
+        score << "; ========================================" << endl;
+        score << "; Function Tables:" << endl;
+        score << "; ========================================" << endl;
+        score <<  functionTables << endl;
+        score << "; ========================================" << endl << endl;
     }
-    
-    // Write Function Tables...
-    score << "; ========================================" << endl;
-    score << "; Function Tables:" << endl;
-    score << "; ========================================" << endl;
-    score <<  ftables << endl;
-    score << "; ========================================" << endl << endl;
-    
     
     if( (voices != NULL) && (numOfVoices > 0) )
     {
@@ -3819,9 +3814,9 @@ void MuMaterial::Clear(void)
     }
 }
 
-void MuMaterial::Show( void )
+void MuMaterial::Show( bool ftables )
 {
-    string score = Score();
+    string score = Score(ftables);
     
     cout << endl;
     
