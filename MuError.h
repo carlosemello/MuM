@@ -68,7 +68,6 @@ const short MuERROR_VOICE_IS_EMPTY = 15;
 * @brief Error Class
 *
 * @details
-*
 * MuError is the error messaging class in MuM. It is used to pass error codes and access 
 * error information from many methods within the library. Every internal MuM method 
 * that uses memory allocation anywhere returns an MuError object. Methods which need to 

@@ -40,7 +40,6 @@ typedef unsigned long uLong;
  * @brief Parameter Block Class
  *
  * @details
- *
  * The MuParamBlock class is used to wrap a vector of floating point values, so that these 
  * these values may be assigned, copied, and otherwise manipulated without the programmer 
  * having to deal with memory management. Parameters in an MuParamBlock are used to 
@@ -95,7 +94,8 @@ class MuParamBlock
 	/** 
 	 * @brief Destructor
 	 *
-	 * @details Releases internal memory buffers
+	 * @details
+     * Releases internal memory buffers
 	 *
 	 **/	
 	~MuParamBlock(void);
@@ -284,7 +284,6 @@ class MuParamBlock
 	 * @brief Crops the end of internal array by n elements
 	 *
 	 * @details
-	 * 
 	 * Trunc() eliminates the upper n elements of an MuParamBlock object’s internal array. If n 
 	 * is greater then current array size, or if object is not initialized, or yet if memory allocation 
 	 * fails, Trunc() terminates with an error, leaving internal array untouched. If n equals 

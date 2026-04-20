@@ -15,7 +15,6 @@
  * @date 3/3/2019
  *
  * @details
- *
  * MuRecorder introduces MIDI input to the MuM library.
  * The class starts an independent thread that constantly
  * looks for incomming MIDI data an adds it to a pair
@@ -314,7 +313,6 @@ public:
      * @brief returns a buffer structure containing the latest input MIDI events
      *
      * @details
-     *
      * GetData() returns recent input data collected by the MIDI input callback
      * in one of the input buffers. Immediately after starting and before copying
      * any data, GetData() redirects the current buffer pointer to a different
@@ -324,7 +322,6 @@ public:
      * the buffer from the begining next time around.
      *
      *@attention
-     *
      * Subsequent calls to GetData() will keep toggling from one buffer to 
      * the other, so that it will never be reading from the same place the 
      * Recorder is storing data. This means that once a block of MIDI data
@@ -334,7 +331,6 @@ public:
      * data if it intends to reuse it.
      *
      * @return
-     *
      * MuMIDIBuffer - GetData() returns a MIDI buffer structure containing a
      * pointer to the data copied from the input buffers. The structure also
      * has a 'max' field with data array size and a 'count' field reporting 
@@ -353,7 +349,6 @@ public:
      * @brief gets called by MIDI system when there is MIDI data available
      *
      * @details
-     *
      * MIDIInputCallback() is a readProc function that needs to be
      * provided by client code when ceating a MIDI input port with CoreMIDI.
      * It gets called directly by the system in a special high priority
@@ -366,25 +361,21 @@ public:
      * documentation)
      *
      * @note
-     *
      * MIDIInputCallback is a static method of the MuRecorder class but should
      * not be called by client code.
      *
      * @param
-     *
      * list (MIDIPacketList) - a CoreMIDI struture containing packets of MIDI data.
      * THis list is parsed by the function to extract MIDI events which are in turn
      * stored into MuRecorder's input buffers.
      *
      * @param
-     *
      * procRef (void *) - This is a context pointer. It contains a pointer to
      * the MuRecorder object where the callback was registered. This is needed
      * to access the input buffers, since the function is static and has no direct
      * connection to the object.
      *
      * @param
-     *
      * srcRef (void *) - This other pointer points to the MIDI source CoreMIDI
      * object to which the recorder's input port was conected. It may be used
      * to retrieve information from that source, if necessary.
@@ -398,7 +389,6 @@ public:
      * @brief gets called by MIDI system when there is MIDI data available
      *
      * @details
-     *
      * MIDIInputCallback() is a user callback function which gets called by
      * RtMidi whenever there is MIDI data available for reading by MuRecorder.
      * The first argument informs the time (delta) when data has arrived.
@@ -409,21 +399,17 @@ public:
      * recorder's internal data and associated methods)
      *
      * @note
-     * 
      * MIDIInputCallback is a static method of the MuRecorder class but should
      * not be called by client code. This method is only called by the MIDI system.
      *
      * @param
-     *
      * timeStamp (double) - a delta timestamp: when the message was received.
      *
      * @param
-     *
      * message (vector<unsigned char> *) - pointer to a standard C++ vector object
      * allocated by RtMidi to store arriving MIDI data and pass it to client code.
      *
      * @param
-     *
      * userData (void *) - This is a context pointer. It contains a pointer to
      * the MuRecorder object where the callback was registered. This is needed
      * to access the input buffers, since the function is static and has no direct
@@ -438,7 +424,6 @@ public:
      * @brief stores a single MIDI message in the current input buffer
      *
      * @details
-     *
      * AddMessageToBuffer() stores the requested MuMIDIMessage in the next
      * available position of the current input buffer. If the buffer is
      * full, AddMessageToBuffer() fails silently. AddMessageToBuffer() is 
@@ -446,19 +431,16 @@ public:
      * event to one of the input buffers.
      *
      * @warning
-     *
      * MIDIInputCallback is a static method of the MuRecorder class but should
      * NEVER be called directly by client code, as this would completely disrupt
      * data count and possibly mess up array boundary controls in the input buffers.
      *
      * @param
-     *
      * msg (MuMIDIMessage) - the message being stored by the function. This
      * structure is provided by the MIDI callback function.
      *
      *
      * @return
-     *
      * void
      *
     **/
@@ -468,28 +450,23 @@ public:
      * @brief adds two MIDI buffers and returns a larger one with the joined data
      *
      * @details
-     *
      * JoinMIDIBuffers() takes two MuMIDIBuffers as input and returns a larger
      * buffer containing data from both. The method creates a new buffer and
      * copies the contents of 'buff1' and then 'buff2' to it. 
      * 
      * @note
-     *
      * This new larger buffer must be released by calling code when it is no 
      * longer needed.
      *
      * @param
-     *
      * buff1 (MuMIDIBuffer) - first buffer to be added; data from this buffer
      * goes at the begining of the resulting buffer.
      *
      * @param
-     *
      * buff1 (MuMIDIBuffer) - second buffer to be added; data from this buffer
      * goes at the end of the resulting buffer;
      *
      * @return
-     *
      * MuMIDIBuffer - the return value is an MuMIDIBuffer structure containing
      * the joined MIDI data. The memory allocated for the 'data' field in the
      * returning buffer structure must be released to avoid memory leaks. If
@@ -503,21 +480,17 @@ public:
      * @brief returns invalid notes extracted from the input buffer      
      *
      * @details
-     *
      * ExtractInvalidNotes() extracts from the input buffer all noteOn events that do not have a corresponding noteOff and returns them in another MIDI buffer structure.
      *
      * @note
-     *
      * The extracted buffer must be released by calling code when it is no
      * longer needed.
      *
      * @param
-     *
      * buff (MuMIDIBuffer) - input buffer containing the notes to be extracted
      *
      *
      * @return
-     *
      * MuMIDIBuffer - the return value is an MuMIDIBuffer structure containing
      * the extracted MIDI data. The memory allocated for the 'data' field in
      * the returning buffer structure must be released to avoid memory leaks.
@@ -531,7 +504,6 @@ public:
      * @brief returns all events of a given type found in the input buffer
      *
      * @details
-     *
      * ExtractEventsOfType() extracts from the input buffer all events of the 
      * requested type and returns them in another MIDI buffer structure. The
      * desired event type is indicated by the first parameter (eventType).
@@ -539,7 +511,6 @@ public:
      * the types defined by specific constants may be requested.
      *
      * @note
-     *
      * The extracted buffer must be released by calling code when it is no
      * longer needed.
      *
@@ -549,7 +520,6 @@ public:
      * @param buff (MuMIDIBuffer) - input buffer containing the events to be extracted
      *
      * @return
-     *
      * MuMIDIBuffer - the return value is an MuMIDIBuffer structure containing
      * the extracted MIDI data. The memory allocated for the 'data' field in
      * the returning buffer structure must be released to avoid memory leaks.
@@ -559,7 +529,5 @@ public:
      **/
     MuMIDIBuffer ExtractEventsOfType(unsigned char eventType, MuMIDIBuffer buff);
 };
-
-
 
 #endif /* MuRecoder_H */

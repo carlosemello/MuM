@@ -122,5 +122,4 @@ const unsigned char MU_PROGRAM_CHANGE = 0xC0;
 const unsigned char MU_MONO_AFTERTOUCH = 0xD0;
 const unsigned char MU_PITCH_BEND = 0xE0;
 
-
 #endif /* MuMIDI_H */

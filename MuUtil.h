@@ -171,7 +171,6 @@ extern void ShowInts( int * array, int size );
  * microsecond value
  *
  * @details
- *
  * ClockStamp() reads the current system time using gettimeofDay()
  * It then converts the 'timeval' structure returned by the system call
  * to the corresponding value in microseconds. This method is extern and
@@ -187,12 +186,9 @@ extern void ShowInts( int * array, int size );
 extern long ClockStamp(void);
 
 /**
- * @brief
- *
- * converts input time from seconds to microseconds
+ * @brief converts input time from seconds to microseconds
  *
  * @details
- *
  * TimeToStamp() simply returns the time provided in 'secs' to its
  * corresponding value in microseconds. In otherwords, it multiplies
  * 'secs' by 1000000. This method is extern and can be used
@@ -212,7 +208,6 @@ extern long TimeToStamp(float secs);
  * representation in the middle octave
  *
  * @details
- *
  * MIDIToPitchClass() simply converts a given MIDI pitch number
  * to its abstract pitch-class representation. Resulting pitch
  * code will be an integer between 60 and 71, representing one of

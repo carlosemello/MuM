@@ -15,7 +15,6 @@
  * @date 3/5/2009
  * 
  * @details
- *
  * This file describes the interface for MuM's Note Class. Notes are used in
  * MuM to represent discrete sonic events (MuNotes) which are contained by 
  * music material objects (MuMaterial), organized in voices (MuVoice) and modified 
@@ -33,10 +32,10 @@
 // Constants
 
 
-//!@brief difference in octaves between MIDI and Csound formats
 /**
-* @details
+*@brief difference in octaves between MIDI and Csound formats
 *
+* @details
 * This is used to convert between MIDI and Csound pitch formats.
 *
 * CS-OCTAVE = ( MIDI-VALUE / ONE_OCTAVE ) + OCTAVE_OFFSET
@@ -58,7 +57,6 @@ const short OCTAVE_OFFSET = 3;
  * calculations in which this separation is necessary.
  *
  * @warning
- *
  * The fields contained in this structure are meant for use in Csound 
  * and their values should not exceed documented limitations to avoid  
  * undesired musical output.
@@ -79,7 +77,6 @@ typedef struct cs_pitch cs_pitch;
  * @brief Note Class
  *
  * @details
- *
  * MuNote is the most basic musical unit of the MuM composition library. 
  * It is used by every class/layer in MuM to represent discrete sonic events 
  * which can be manipulated by the library's various methods. 
@@ -222,7 +219,6 @@ class MuNote
 	 * @brief Resets note fields to defaults
 	 *
 	 * @details
-	 *
 	 * Removes every parameter value from the note's fields, 
 	 * returning them to default values (0). It also clears the 
 	 * paramblock inside the note.  
@@ -233,8 +229,7 @@ class MuNote
 	/**
 	* @brief Returns the instrument number chosen for the note.
 	*
-	* @details 
-	*
+	* @details
 	* At score output time, instrument numbers are used to call an instrument
 	* module with a Csound Score's 'i' opcode (p1) or a Program Change Number (PC#)
 	* in a MIDI track; when MIDI is used for output, this Program Change Event is 
@@ -249,8 +244,7 @@ class MuNote
 	/**
 	 * @brief Sets the instrument choice for the note.
 	 *
-	 * @details 
-	 *
+	 * @details
 	 * When using notes individually it is possible to assign unique instrument
 	 * numbers to each note. However, when a note is inserted in a musical material
 	 * (MuMaterial), its instrument choice is changed to reflect that of the voice
@@ -271,8 +265,7 @@ class MuNote
 	/**
 	 * @brief Returns the note's start time in seconds.
 	 *
-	 * @details 
-	 *
+	 * @details
 	 * Start() returns the note's start time in seconds. This is the moment  
 	 * at which the note begins to sound. A note's start time is relative 
 	 * to the MuMaterial object in which it is inserted. In other words, a
@@ -289,8 +282,7 @@ class MuNote
 	/**
 	 * @brief Sets the note's start time to the input value.
 	 *
-	 * @details 
-	 *
+	 * @details
 	 * SetStart() replaces the note's start time with the value passed to it. 
 	 * A note's start time is relative to the MuMaterial object in which
 	 * it is inserted. When a note is inserted in an MuMaterial object
@@ -328,7 +320,6 @@ class MuNote
 	 * @brief Returns the note's ending point in time (seconds)  
 	 *
 	 * @details
-	 *
 	 * End() returns the note's ending point in time (seconds). This corresponds  
 	 * to Start() + Dur(). Similarly to its start time, a note's end time is relative 
 	 * to the MuMaterial object in which it is inserted.
@@ -342,7 +333,6 @@ class MuNote
 	 * @brief Returns the note's pitch 
 	 *
 	 * @details
-	 *
 	 * Pitch() returns the note's pitch. This is an integer designating a key in  
 	 * a standard MIDI keyboard, where middle-C = 60. In MIDI output this value  
 	 * becomes the first data byte (7 bits) in the coresponding NoteOn event.  
@@ -358,7 +348,6 @@ class MuNote
 	 * @brief Sets the note's pitch 
 	 *
 	 * @details
-	 *
 	 * SetPitch() sets the note's pitch. This is an integer designating a key in 
 	 * a standard MIDI keyboard, where middle-C = 60. In MIDI output this value  
 	 * becomes the first data byte (7 bits) in the coresponding NoteOn event.  
@@ -375,7 +364,6 @@ class MuNote
 	 * @brief Sets the note's pitch with cs_pitch
 	 *
 	 * @details
-	 *
 	 * SetPitch() sets the note's pitch with the contents of newPitch. 
 	 * This is a structure containing separate values for octave and pitch-class,
 	 * according to Csound format. This data is converted on assignment to a MIDI
@@ -391,7 +379,6 @@ class MuNote
 	 * @brief Sets the note's pitch to its pitch-class in middle octave  
 	 *
 	 * @details
-	 *
 	 * This method effectively transposes the note's pitch to the
 	 * middle octave, from whichever octave it was in.
 	 *
@@ -403,7 +390,6 @@ class MuNote
 	 * @brief Returns the note's amplitude  
 	 *
 	 * @details
-	 *
 	 * Amp() returns the note's amplitude - a value between 0.0 and 1.0. This value  
 	 * is converted,at output time, to an appropriate format, depending on output target:  
 	 * dB (0 - 120) for Csound; key velocity (0-127) for MIDI NoteOn events.  
@@ -417,7 +403,6 @@ class MuNote
 	 * @brief Sets the amplitude for the note  
 	 *
 	 * @details
-	 *
 	 * SetAmp() sets the amplitude for the note. Input argument should be a value  
 	 * between 0.0 and 1.0. This value is converted, at output time, to an appropriate  
 	 * format, depending on  output target: dB ( 0 - 120) for Csound; key velocity 
@@ -434,7 +419,6 @@ class MuNote
 	 * @brief Returns a copy of the note's internal parameter block  
 	 *
 	 * @details
-	 *
 	 * Params() returns a copy of the note's internal parameter block. This is  
 	 * an instance of the MuParamBlock class, which contains an array of floats  
 	 * used to represent a note's extra parameters. Any information needed by  
@@ -452,7 +436,6 @@ class MuNote
 	 * @brief Stores a copy of the MuParamBlock object passed to it 
 	 *
 	 * @details
-	 *
 	 * SetParams() stores a copy of the MuParamBlock object contained in inParams. This is
 	 * an instance of the MuParamBlock class, which contains an array of floats  
 	 * used to represent a note's extra parameters. Any information needed by  
@@ -468,7 +451,6 @@ class MuNote
 	 * @brief Returns the note's pitch as a cs_pitch structure 
 	 *
 	 * @details
-	 *
 	 * CsPitch() returns the note's pitch as a cs_pitch structure. This is a standard C  
 	 * strucure containing pitch information separated in two fields: octave and  
 	 * pitch class. This is used by the note's internal methods to convert pitch data  
@@ -483,7 +465,6 @@ class MuNote
 	 * @brief Returns the note's pitch as a string in Csound format 
 	 *
 	 * @details
-	 *
 	 * PitchString() returns the note's pitch as a standard C++ string object, containing 
 	 * a character string in Csound pitch format: Octave designation  (3-11) followed 
 	 * by a dot and pitch class (0-11). This is the string used by the note's internal  
@@ -499,7 +480,6 @@ class MuNote
      * @brief Returns the note's pitch name
      *
      * @details
-     *
      * PitchName() returns the note's pitch name for the requested language.
      * Currently supported languages are English (e.g.: A, B, C, D, ...) and
      * Portuguese (e.g.: La, Si, Do, Re, ...). Accidentals are represented by
@@ -522,7 +502,6 @@ class MuNote
 	 * @brief Returns the note's Csound score representation (i-line)  
 	 *
 	 * @details
-	 *
 	 * CsString() returns the note's data, as a complete Csound score line,  
 	 * in a standard C++ string object. The note's internal fields are incorporated  
 	 * into the note line as described bellow: 
@@ -545,7 +524,6 @@ class MuNote
 	 * @brief Returns an activation event for the note as an MuMIDIMessage struct
 	 *
 	 * @details
-	 *
 	 * MIDIOn() converts the note's data to MIDI format and returns the
 	 * note-on event for the note. Note data is assigned as follows:
 	 * <ul>
@@ -564,7 +542,6 @@ class MuNote
 	 * @brief Returns a deactivation event for the note as an MuMIDIMessage struct
 	 *
 	 * @details
-	 *
 	 * MIDIOff()  converts the note's data to MIDI format and returns the
 	 * note-off event for the note. Note data is assigned as follows:
 	 * <ul>
@@ -582,7 +559,6 @@ class MuNote
      * @brief Returns a deactivation event for the note as an MuMIDIMessage struct
      *
      * @details
-     *
      * MIDIOff()  converts the note's data to MIDI format and returns the
      * note-off event for the note. Note data is assigned as follows:
      * <ul>

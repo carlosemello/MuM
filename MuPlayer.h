@@ -14,7 +14,6 @@
  * @date 2/17/2019
  *
  * @details
- *
  * MuPlayer orquestrates the realtime playback facilities
  * in the MuM library. It handles everything from scheduling
  * materials for playback to managing working threads
@@ -66,7 +65,6 @@ const int MESSAGE_LENGTH = 3;
  * @brief Event Queue - MIDI events to be played
  *
  * @details
- *
  * This structure contais a pointer to an array of MIDI events
  * and the number of events in this array. It is used to pass
  * a sequence of events to a player event thread so it can quickly
@@ -105,7 +103,6 @@ typedef struct EventQueue EventQueue;
  * @brief MuPlayer Class
  *
  * @details
- *
  * INTRO:
  *
  * MuPlayer is the only class in the MuM Library realtime
@@ -125,7 +122,7 @@ typedef struct EventQueue EventQueue;
  * heard. However this call is synchronous and it starts
  * a system level process which will play the entire length
  * of the material before returning control to the Library.
- * MIDI playback with MuPlayer,on the other hand, can
+ * MIDI playback with MuPlayer, on the other hand, can
  * be used at any time during without blocking an application
  * execution flow.
  *
@@ -184,7 +181,7 @@ typedef struct EventQueue EventQueue;
  * looking for active queues in the pool. For every active queue, it finds
  * the next pending event and checks its timestamp. If it is expired the
  * scheduler sends it. Then it moves to the next active queue and so on,
- * until the applications terminates or the player is paused, stopped or
+ * until the application terminates or the player is paused, stopped or
  * reset. When the scheduler reaches the last event in a queue, it
  * resets the queue and marks it as inactive, so it can be used again
  * by the player.
@@ -239,7 +236,6 @@ typedef struct EventQueue EventQueue;
  * Currently, only PLAYBACK_MODE_NORMAL is implemented.
  *
  * @warning
- *
  * MuPlayer's playback queue pool is allocated at compile time.
  * Its size is limited by the MAX_QUEUES constant. Depending
  * on expected density of materials in the application, it may
@@ -311,7 +307,6 @@ class MuPlayer
      * @brief Initializes the MuPlayer MIDI configurations and starts event scheduler thread
      *
      * @details
-     *
      * Init() is responsible for initializing the MIDI environment
      * for the Player. The CoreMIDI implementation of this method
      * starts out by creating a MIDI client and an associated MIDI output
@@ -341,7 +336,6 @@ class MuPlayer
      * @brief Selects a MIDI destination  for playback
      *
      * @details
-     *
      * SelectMIDIDestination() takes a destination number and stores it
      * for use by the player, replacing any prior selections.
      * Valid destination numbers are supplied by CoreMIDI /RTMidiand can be
@@ -361,7 +355,6 @@ class MuPlayer
      * @brief Lists MIDI destinations available for playback in the system
      *
      * @details
-     *
      * ListDestinations() shows the avialable MIDI destinations at the time
      * of the call. The numbers in the list can be used by 
      * SelectMIDIDestination() to choose a target for playback. It should
@@ -398,7 +391,6 @@ class MuPlayer
      * used by MuPlayer
      *
      * @details
-     *
      * Reset() releases all resources created by Init()
      * and zeroes all  internal variables associated with them.
      * It also stops the scheduler thread and throws away any active
@@ -416,7 +408,6 @@ class MuPlayer
      * @brief initiates a playback queue for a requested material and mode
      *
      * @details
-     *
      * Play() takes the input MuMaterial object contained in the 'inMat'
      * argument and assigns an event queue from the Player's playback pool
      * to handle that input material.
@@ -453,7 +444,6 @@ class MuPlayer
      * (currently, only PLAYBACK_MODE_NORMAL is implemented)
      *
      * @return
-     *
      * bool - Play() returns false if (a) it couldn't find an idle event
      * queue in the pool or (b) the call to StartQueueThread() fails,
      *  otherwise it returns true (see  StartQueueThread() for details).
@@ -466,7 +456,6 @@ class MuPlayer
      * events.
      *
      * @details
-     *
      * SendEvents() takes the input MIDI event buffer contained in argument 
      * 'inEvents' and assigns an event queue from the Player's playback pool
      * to handle those events.
@@ -494,8 +483,7 @@ class MuPlayer
      *
      * @endcode
      *
-     * @note     
-     *
+     * @note
      * SendEvents() does not create a separate working thread. Instead, it
      * enqueues MIDI events directly to the playback pool. Therefore, MIDI
      * buffers for SendEvents() should typically be short, so they don't
@@ -503,12 +491,10 @@ class MuPlayer
      * synchronization.
      *
      * @param
-     *
      * inEvents (MuMIDIBuffer) - events to be sent. this buffer should be
      * allocated by calling code and is released inside SendEvents().
      *
      * @return
-     *
      * bool - SendEvents() returns false if (a) it couldn't find an
      * idle event queue in the pool, otherwise it returns true.
      *
@@ -520,14 +506,12 @@ class MuPlayer
      * desired MIDI channel.
      *
      * @details
-     *
      * SendProgramChange() calls SendEvents(), with a single MIDI
      * event, which is a Program Change event to the requested MIDI channel.
      * In order to do that, this method allocates a buffer which should be released
      * by SendEvents().
      *
      * @param
-     *
      * channel (int) - MIDI channel (0-15) to send event to;
      * pc (int) - Program Change (0 - 127) to be sent;
      *
@@ -542,7 +526,6 @@ class MuPlayer
      * @brief starts an event queue working thread to playback notes
      *
      * @details
-     *
      * Each queue has a working thread associated with it. It is
      * used to fill up the queue with MIDI events extracted from
      * the material being played. StartQueueThread() initiates this
@@ -567,7 +550,6 @@ class MuPlayer
      * @brief starts an event queue working thread for MIDI events
      *
      * @details
-     *
      * This overloaded version of StartQueueThread() works with
      * a MIDI buffer instead of an MuMaterial.
      * Each queue has a working thread associated with it. It is
@@ -594,7 +576,6 @@ class MuPlayer
      * in the corresponding playback event queue.
      *
      * @details
-     *
      * EnqueueMaterial() is the thread function for a queue's working
      * thread. It is initiated by StartQueueThread() and is responsible
      * for getting each note from the input material converted to MIDI
@@ -619,7 +600,6 @@ class MuPlayer
      * corresponding playback event queue.
      *
      * @details
-     *
      * EnqueueEvents() is a thread function for a queue's working
      * thread. It is initiated by the buffer verion ofStartQueueThread() 
      * and is responsible for copying each MIDI event in the buffer to
@@ -642,7 +622,6 @@ class MuPlayer
      * @brief starts the event scheduling thread
      *
      * @details
-     *
      * StartScheduler() initiates the MIDI event scheduling thread
      * within an MuPlayer. Once successfully started, the scheduler
      * will keep looking for pending events on every active queue
@@ -661,7 +640,6 @@ class MuPlayer
      * system at the appropriate time
      *
      * @details
-     *
      * ScheduleEvents() is the scheduler thread function. It is started
      * from StartScheduler() and runs continuously until the Player is
      * stopped. Before starting its main loop, ScheduleEvents() checks 
@@ -687,7 +665,6 @@ class MuPlayer
      * @brief sends MIDI messages to the MIDI System
      *
      * @details
-     *
      * SendMIDIMessage() is called by ScheduleEvents() to deliver
      * a single MIDI message at a time to its destination.
      * The time stamp within 'msg' is always ignored.
@@ -695,7 +672,6 @@ class MuPlayer
      * Keeping track of time between events is done by calling code.
      *
      * @note
-     *
      * This method should NOT be called directly by client code. It is
      * meant to be called by MuPlayer internal code running on another
      * thread.
@@ -739,7 +715,6 @@ class MuPlayer
      * @brief pauses playback for all active queues in the playback pool
      *
      * @details
-     *
      * Pause() can be used to pause and resume playback for all event queues
      * controlled by the Player. Its single argument defines which
      * action will take place after the call. If 'T_F' contains 'true', the
@@ -759,7 +734,6 @@ class MuPlayer
      * @brief stops all playback and cancels all event queues
      *
      * @details
-     *
      * Stop() can be used to stop playback. When Stop() is called,
      * all event queues are deactivated. It is not possible to resume
      * previously scheduled playback once the Player issues a

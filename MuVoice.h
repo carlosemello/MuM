@@ -15,7 +15,6 @@
  * @date 3/5/2009
  *
  * @details
- *
  * a voice  represents an individual sequence
  * of notes inside a music material object, which
  * in turn may contain any number of voices
@@ -460,7 +459,7 @@ class MuVoice
 	 * to value 1. If SetInstrumentNumber() fails to Get or Set a note, when updating
 	 * instrument choices, it aborts and returns a corresponding error.
 	 *
-	 * param
+	 * @param
 	 * inInstrNum (uShort) - new instrument number for the voice
 	 *
 	 * @return
@@ -498,7 +497,7 @@ class MuVoice
      * range is provided, SetChannelNumber will default
      * to value 1.
      *
-     * param
+     * @param
      * channelNum (uShort) - new instrument number for the voice
      *
      * @return
@@ -540,7 +539,7 @@ class MuVoice
      * used for identification by any methods in MuM. Thus, calling 
      * code may employ it as it seems fit.
      *
-     * param
+     * @param
      * name (string) - a standard C++ string containing a name for the voice.
      *
      * @return
@@ -560,7 +559,7 @@ class MuVoice
 	 * fails to Get or Set any notes, when transposing them,
 	 * it aborts and returns a corresponding error.
 	 *
-	 * param
+	 * @param
 	 * inInstrNum (uShort) - new instrument number for the voice
 	 *
 	 * @return
@@ -656,6 +655,9 @@ class MuVoice
      * @param
      * limit (float) - time reference limit to which the voice will
      * be trimmed
+     *
+     * @return
+     * MuError
      *
      **/
     MuError TrimTo(float limit);
